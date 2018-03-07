@@ -30,7 +30,7 @@ class Lexer(private val input: String): Exec<List<Token>> {
                     if (tokens.isNotEmpty()) {
                         val last = tokens.last()
 
-                        if (last.type in arrayOf(INT, DEC, BOOL, CHAR, TEXT)) { // change toTypeOf symbol
+                        if (last.type in arrayOf(INT, DEC, BOOL, CHAR, TEXT)) {
                             last.type = SYMBOL
                         }
                     }
@@ -67,7 +67,7 @@ class Lexer(private val input: String): Exec<List<Token>> {
                             if (stream.next() == '\n') break
                         }
                     }
-                    else if (stream.peek(0) == '*' && stream.peek(1) == '*') { // block comment, skip util end
+                    else if (stream.peek(0) == '*' && stream.peek(1) == '*') { // block comment, skip until end
                         while (stream.hasNext) {
                             if (stream.next() == '*' && stream.peek(0) == '/') {
                                 stream.move(1)
