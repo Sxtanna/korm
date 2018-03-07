@@ -60,6 +60,23 @@ class Lexer(private val input: String): Exec<List<Token>> {
 
                     add(type, data)
                 }
+                '/' -> {
+
+                    if (stream.peek(0) == '/') { // line comment, skip this line
+                        while (stream.hasNext) {
+                            if (stream.next() == '\n') break
+                        }
+                    }
+                    else if (stream.peek(0) == '*' && stream.peek(1) == '*') { // block comment, skip util end
+                        while (stream.hasNext) {
+                            if (stream.next() == '*' && stream.peek(0) == '/') {
+                                stream.move(1)
+                                break
+                            }
+                        }
+                    }
+
+                }
                 else -> {
 
                     var type = SYMBOL

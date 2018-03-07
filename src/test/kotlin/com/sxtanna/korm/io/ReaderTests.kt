@@ -145,7 +145,6 @@ class ReaderTests {
 
     }
 
-
     @Test
     internal fun testLoose() {
 
@@ -159,7 +158,6 @@ class ReaderTests {
         println(korm.pull(text.trimIndent()).toRef<Pair<String, String>>())
     }
 
-
     @Test
     internal fun testInterface() {
 
@@ -172,7 +170,6 @@ class ReaderTests {
 
         println(korm.pull(text.trimIndent()).toRef<Pair<String, String>>())
     }
-
 
     @Test
     internal fun testAsList() {
@@ -198,7 +195,6 @@ class ReaderTests {
 
         println(korm.pull(text).toList<AsListType>())
     }
-
 
     @Test
     internal fun testCodec() {
@@ -241,7 +237,6 @@ class ReaderTests {
 
     }
 
-
     @Test
     internal fun testSymbolValue() {
         val text =
@@ -255,6 +250,30 @@ class ReaderTests {
         val pull = korm.pull(text)
 
         println(pull.viewTypes())
+    }
+
+    @Test
+    internal fun testComments() {
+
+        val text0 =
+                """
+                   key: 21 // single line comment
+                """
+
+        val pull0 = korm.pull(text0)
+        println(pull0.viewTypes())
+
+
+        val text1 =
+                """
+                   /**
+
+                   */
+                   hash: { 1:2 3:4 5:6 }
+                """
+
+        val pull1 = korm.pull(text1)
+        println(pull1.viewTypes())
     }
 
 }

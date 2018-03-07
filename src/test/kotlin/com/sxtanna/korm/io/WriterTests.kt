@@ -110,14 +110,12 @@ class WriterTests {
 
     }
 
-
     @Test
     internal fun testAsList() {
 
         println(korm.push(AsListType("Sxtanna", AsListType.Date.MONDAY)))
 
     }
-
 
     @Test
     internal fun testCodec() {
