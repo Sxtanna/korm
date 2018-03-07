@@ -1,0 +1,30 @@
+group 'com.sxtanna.korm'
+version '1.0'
+
+buildscript {
+
+    ext.versionKotlin = '1.2.30'
+
+    repositories.mavenCentral()
+
+    dependencies.classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versionKotlin"
+
+}
+
+
+apply plugin: 'maven'
+apply plugin: 'kotlin'
+
+
+repositories.mavenCentral()
+
+dependencies {
+    compileOnly "org.jetbrains.kotlin:kotlin-reflect:$versionKotlin"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versionKotlin"
+
+    testCompile "org.jetbrains.kotlin:kotlin-reflect:$versionKotlin"
+    testCompile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versionKotlin"
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.junit.jupiter:junit-jupiter-engine:5.0.1'
+}
