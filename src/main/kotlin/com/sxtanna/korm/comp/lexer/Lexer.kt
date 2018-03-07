@@ -170,7 +170,7 @@ class Lexer(private val input: String): Exec<List<Token>> {
 
     }
 
-    
+
     private companion object Data {
 
         val RETROSPECT = setOf(INT, DEC, BOOL, CHAR, TEXT)
