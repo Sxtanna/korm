@@ -30,7 +30,7 @@ class Lexer(private val input: String): Exec<List<Token>> {
                     if (tokens.isNotEmpty()) {
                         val last = tokens.last()
 
-                        if (last.type in arrayOf(INT, DEC, BOOL, CHAR, TEXT)) {
+                        if (last.type in RETROSPECT) {
                             last.type = SYMBOL
                         }
                     }
@@ -167,6 +167,13 @@ class Lexer(private val input: String): Exec<List<Token>> {
 
             while (hasNext) block(chars[index++])
         }
+
+    }
+
+    
+    private companion object Data {
+
+        val RETROSPECT = setOf(INT, DEC, BOOL, CHAR, TEXT)
 
     }
 
