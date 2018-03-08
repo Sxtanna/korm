@@ -8,6 +8,9 @@ import java.nio.charset.Charset
 import kotlin.reflect.KClass
 
 class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormWriter()) {
+    constructor(reader: KormReader): this(reader, KormWriter())
+    constructor(writer: KormWriter): this(KormReader(), writer)
+
 
     // writer
     fun push(data: Any): String {

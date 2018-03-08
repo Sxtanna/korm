@@ -84,6 +84,8 @@ class KormReader {
 
         inline fun <reified T : Any> to() = to(T::class)
 
+        fun <T : Any> to(clazz: Class<T>): T? = to(clazz as Type) // who doesn't love enhanced Java Interop?
+
         fun <T : Any> to(type: Type): T? {
             val clazz = Reflect.nonPrimitive((when(type) {
                 is ParameterizedType -> type.rawType
@@ -179,7 +181,7 @@ class KormReader {
                 val asList = Reflect.findAnnotation<KormList>(clazz)?.props?.toList()
 
                 if (asList == null) {
-                    for ((index, field) in Reflect.access(clazz).withIndex()) {
+                    for (field in Reflect.access(clazz)) {
                         val korm = types.find { it.key.data.toString() == field.name } ?: continue
                         types.remove(korm)
 

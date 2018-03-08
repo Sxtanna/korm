@@ -52,13 +52,17 @@ enum class Options {
 
     companion object {
 
+        @JvmStatic
         fun of(vararg options: Options) = WriterOptions(setOf(*options))
 
 
+        @JvmStatic
         fun none() = of()
 
+        @JvmStatic
         fun max() = of(*values())
 
+        @JvmStatic
         fun min(vararg options: Options) = of(SPACE_AFTER_ASSIGN, HASH_ENTRY_ON_NEW_LINE, COMPLEX_LIST_ENTRY_ON_NEW_LINE, *options)
 
     }
