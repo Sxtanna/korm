@@ -10,12 +10,16 @@ interface Lang {
 
     val name: String
 
-
     class Codec : KormCodec<Lang> {
 
         override fun pull(reader: KormReader.ReaderContext, types: MutableList<KormType>): Lang? {
-            println(types)
-            return English
+            return types.find { it.key.data == "name" }?.let { it as? KormType.BaseType }?.let {
+                when(it.data) {
+                    "English" -> English
+                    "French" -> French
+                    else -> badState("No lang by the name ${it.data}")
+                }
+            }
         }
 
         override fun push(data: Lang?, writer: KormWriter.WriterContext) {
