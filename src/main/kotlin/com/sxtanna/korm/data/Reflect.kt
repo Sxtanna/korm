@@ -15,7 +15,7 @@ import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
 
-object Reflect {
+internal object Reflect {
 
     private val unsafe: Unsafe?
 

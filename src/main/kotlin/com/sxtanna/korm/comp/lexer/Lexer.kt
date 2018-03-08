@@ -6,7 +6,7 @@ import com.sxtanna.korm.comp.Type
 import com.sxtanna.korm.comp.Type.*
 import com.sxtanna.korm.data.Data
 
-class Lexer(private val input: String): Exec<List<Token>> {
+internal class Lexer(private val input: String): Exec<List<Token>> {
 
     private val tokens = mutableListOf<Token>()
 

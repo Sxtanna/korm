@@ -6,7 +6,7 @@ import com.sxtanna.korm.comp.Type.*
 import com.sxtanna.korm.data.Data
 import com.sxtanna.korm.data.KormType
 
-class Typer(private val input: List<Token>): Exec<List<KormType>> {
+internal class Typer(private val input: List<Token>): Exec<List<KormType>> {
 
     private val types = mutableListOf<KormType>()
 
