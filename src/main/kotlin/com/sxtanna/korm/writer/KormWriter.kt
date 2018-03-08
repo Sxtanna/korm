@@ -300,7 +300,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                 }
             }
             else {
-                val codec = custom.codec.createInstance() as KormPusher<Any>
+                val codec = custom.codec.let { it.objectInstance ?: it.createInstance() } as KormPusher<Any>
                 codec.push(inst, this)
             }
         }
@@ -352,7 +352,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                 }
             }
             else {
-                val codec = custom.codec.createInstance() as KormPusher<Any>
+                val codec = custom.codec.let { it.objectInstance ?: it.createInstance() } as KormPusher<Any>
                 codec.push(inst, this)
             }
 

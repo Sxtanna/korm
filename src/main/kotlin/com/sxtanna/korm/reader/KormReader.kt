@@ -202,7 +202,7 @@ class KormReader {
                 return instance
             }
             else {
-                val codec = custom.codec.createInstance() as KormPuller<T>
+                val codec = custom.codec.let { it.objectInstance ?: it.createInstance() } as KormPuller<T>
                 //println("USING CODEC")
 
                 return codec.pull(this, types)
@@ -219,10 +219,9 @@ class KormReader {
 
                     if (type is WildcardType) return mapKormToType(korm, type.upperBounds[0])
 
-
                     val custom = Reflect.findAnnotation<KormCustomCodec>((type as Class<*>).kotlin)
 
-                    if (custom != null) return (custom.codec.createInstance() as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
+                    if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
 
 
                     mapDataToType(korm.data, type)
@@ -236,7 +235,7 @@ class KormReader {
 
                             val custom = Reflect.findAnnotation<KormCustomCodec>(type.kotlin)
 
-                            if (custom != null) return (custom.codec.createInstance() as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
+                            if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
 
 
                             if (type.isArray.not()) {
@@ -268,8 +267,7 @@ class KormReader {
 
                             val custom = Reflect.findAnnotation<KormCustomCodec>((type.rawType as Class<*>).kotlin)
 
-                            if (custom != null) return (custom.codec.createInstance() as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
-
+                            if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
 
                             mapListData(korm, (type.rawType as Class<*>).kotlin, type.actualTypeArguments[0])
                         }
@@ -325,7 +323,7 @@ class KormReader {
         fun mapBaseData(korm: KormType.BaseType, clazz: KClass<*>): Any? {
             val custom = Reflect.findAnnotation<KormCustomCodec>(clazz)
 
-            if (custom != null) return (custom.codec.createInstance() as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
+            if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
 
             return mapData(korm.data, clazz)
         }
@@ -334,7 +332,7 @@ class KormReader {
             //println("mapListData: korm = [${korm}], clazz = [${clazz}], type = [${type}]")
 
             val data = korm.data.map {
-                mapDataToType(it, type)
+                mapDataToType(it, type, (it as? KormType)?.key?.type == COMPLEX)
             }
 
             //println("Data is $data")
@@ -365,6 +363,8 @@ class KormReader {
 
             if (data is String && complex) { // ffs here we go... we gotta deserialize complex keys
                 //println("TESTING FOR COMPLEX KEY")
+
+                println("Evaluating complex key $data")
 
                 return read(data).let { it.to<Any>(type) }.apply {
 
@@ -409,7 +409,7 @@ class KormReader {
                     }
                 }
                 is WildcardType -> {
-                    return mapDataToType(data, type.upperBounds[0])
+                    return mapDataToType(data, type.upperBounds[0], complex)
                 }
                 is ParameterizedType -> {
                     val typeArgs = type.actualTypeArguments
