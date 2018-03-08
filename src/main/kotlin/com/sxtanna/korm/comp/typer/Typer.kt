@@ -18,11 +18,11 @@ class Typer(private val input: List<Token>): Exec<List<KormType>> {
             val token = tokens.next()
 
             when(token.type) {
-                INT, DEC -> {
-                    add(KormType.BaseType(Data.none(), parseNumber(token)))
-                }
                 BOOL -> {
                     add(KormType.BaseType(Data.none(), parseBool(token)))
+                }
+                INT, DEC -> {
+                    add(KormType.BaseType(Data.none(), parseNumber(token)))
                 }
                 CHAR, TEXT -> {
                     add(KormType.BaseType(Data.none(), parseQuoted(token)))
@@ -39,7 +39,6 @@ class Typer(private val input: List<Token>): Exec<List<KormType>> {
                 else -> throw IllegalStateException("Out of place token: $token")
             }
         }
-
 
         return types
     }
@@ -124,10 +123,10 @@ class Typer(private val input: List<Token>): Exec<List<KormType>> {
                     list += next.data.data
                 }
                 BRACE_L -> {
-                    list.add(KormType.HashType(Data.none(), parseHash()))
+                    list += KormType.HashType(Data.none(), parseHash())
                 }
                 BRACK_L -> {
-                    list.add(KormType.ListType(Data.none(), parseList()))
+                    list += KormType.ListType(Data.none(), parseList())
                 }
                 else -> throw IllegalStateException("Token out of place: $next")
             }
