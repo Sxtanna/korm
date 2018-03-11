@@ -276,4 +276,17 @@ class ReaderTests {
         println(pull1.viewTypes())
     }
 
+
+    @Test
+    internal fun testMessage() {
+
+        val text =
+                """
+                    message: "This is an error!"
+                    name: "Error"
+                """
+
+        val pull = korm.pull(text)
+        println(pull.to(Message::class))
+    }
 }

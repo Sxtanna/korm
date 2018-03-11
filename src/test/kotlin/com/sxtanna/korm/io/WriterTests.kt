@@ -121,9 +121,13 @@ class WriterTests {
     internal fun testCodec() {
 
         println(korm.push(CustomCodecTest("Sxtanna")))
-        println("\n\n")
-        println(korm.push(User(21L)))
 
+    }
+
+
+    @Test
+    internal fun testMessage() {
+        println(korm.push(Message.Error("This is an error!")))
     }
 
 }
