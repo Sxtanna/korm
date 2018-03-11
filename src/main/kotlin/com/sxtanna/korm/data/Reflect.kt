@@ -128,20 +128,7 @@ internal object Reflect {
     }
 
     fun <T : Annotation> findAnnotation(on: KClass<*>, clazz: KClass<T>): T? {
-        val java = on.java
-
-        return java.annotations.find { clazz.isInstance(it) } as? T ?: run {
-
-            if (java.superclass != Any::class.java) {
-                java.superclass?.let { (it as? Class<*>)?.kotlin }?.let { findAnnotation(it, clazz) }?.let { return it }
-            }
-
-            for (inter in java.interfaces) {
-                findAnnotation(inter.kotlin, clazz)?.let { return it }
-            }
-
-            return null
-        }
+        return on.java.getAnnotation(clazz.java)
     }
 
     inline fun <reified T : Annotation> findAnnotation(on: KClass<*>) = findAnnotation(on, T::class)
