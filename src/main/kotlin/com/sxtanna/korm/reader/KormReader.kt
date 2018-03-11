@@ -10,6 +10,7 @@ import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.RefType
 import com.sxtanna.korm.data.Reflect
 import com.sxtanna.korm.data.custom.KormCustomCodec
+import com.sxtanna.korm.data.custom.KormCustomPull
 import com.sxtanna.korm.data.custom.KormList
 import java.io.*
 import java.lang.reflect.GenericArrayType
@@ -87,7 +88,7 @@ class KormReader {
         fun <T : Any> to(clazz: Class<T>): T? = to(clazz as Type) // who doesn't love enhanced Java Interop?
 
         fun <T : Any> to(type: Type): T? {
-            val clazz = Reflect.nonPrimitive((when(type) {
+            val clazz = Reflect.nonPrimitive((when (type) {
                 is ParameterizedType -> type.rawType
                 else -> type
             } as Class<*>).kotlin)
@@ -167,13 +168,13 @@ class KormReader {
         inline fun <reified K : Any, reified V : Any> toHashRef() = toHashRef(RefType.of<K>(), RefType.of<V>())
 
 
-
         fun <T : Any> mapInstance(clazz: KClass<out T>, types: MutableList<KormType> = this.types): T? {
             //println("Mapping instance of $clazz")
 
-            val custom = Reflect.findAnnotation<KormCustomCodec>(clazz)
+            val custom = getCustomPull(clazz)
 
-            if (custom == null) {
+            if (custom != null) return custom.pull(this, types)
+            else {
                 //println("Has no codec!")
 
                 val instance = Reflect.newInstance(clazz) ?: return null
@@ -203,12 +204,6 @@ class KormReader {
 
                 return instance
             }
-            else {
-                val codec = custom.codec.let { it.objectInstance ?: it.createInstance() } as KormPuller<T>
-                //println("USING CODEC")
-
-                return codec.pull(this, types)
-            }
         }
 
 
@@ -221,10 +216,8 @@ class KormReader {
 
                     if (type is WildcardType) return mapKormToType(korm, type.upperBounds[0])
 
-                    val custom = Reflect.findAnnotation<KormCustomCodec>((type as Class<*>).kotlin)
-
-                    if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
-
+                    val custom = getCustomPull((type as Class<*>).kotlin)
+                    if (custom != null) return custom.pull(this, mutableListOf(korm))
 
                     mapDataToType(korm.data, type)
                 }
@@ -235,9 +228,8 @@ class KormReader {
                         is Class<*> -> {
                             //println("MAPPING A LIST [1]")
 
-                            val custom = Reflect.findAnnotation<KormCustomCodec>(type.kotlin)
-
-                            if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
+                            val custom = getCustomPull(type.kotlin)
+                            if (custom != null) return custom.pull(this, mutableListOf(korm))
 
 
                             if (type.isArray.not()) {
@@ -267,9 +259,8 @@ class KormReader {
                             //println("MAPPING A LIST [4]")
                             val type = type as ParameterizedType
 
-                            val custom = Reflect.findAnnotation<KormCustomCodec>((type.rawType as Class<*>).kotlin)
-
-                            if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
+                            val custom = getCustomPull((type.rawType as Class<*>).kotlin)
+                            if (custom != null) return custom.pull(this, mutableListOf(korm))
 
                             mapListData(korm, (type.rawType as Class<*>).kotlin, type.actualTypeArguments[0])
                         }
@@ -291,7 +282,7 @@ class KormReader {
                             //println("MAPPING A HASH [3]")
                             val type = type as ParameterizedType
 
-                            val (kType, vType) = when(type.rawType as Class<*>) {
+                            val (kType, vType) = when (type.rawType as Class<*>) {
                                 Pair::class.java -> {
                                     String::class.java to type.actualTypeArguments[1]
                                 }
@@ -304,7 +295,7 @@ class KormReader {
                             val data = mapHashData(korm, (type.rawType as Class<*>).kotlin, kType, vType)
 
                             // assign manually
-                            when(type.rawType as Class<*>) {
+                            when (type.rawType as Class<*>) {
                                 Pair::class.java -> {
                                     Pair(data?.get("first"), data?.get("second"))
                                 }
@@ -323,9 +314,8 @@ class KormReader {
         }
 
         fun mapBaseData(korm: KormType.BaseType, clazz: KClass<*>): Any? {
-            val custom = Reflect.findAnnotation<KormCustomCodec>(clazz)
-
-            if (custom != null) return (custom.codec.let { it.objectInstance ?: it.createInstance() } as? KormPuller<Any>)?.pull(this, mutableListOf(korm))
+            val custom = getCustomPull(clazz)
+            if (custom != null) return custom.pull(this, mutableListOf(korm))
 
             return mapData(korm.data, clazz)
         }
@@ -523,6 +513,22 @@ class KormReader {
             //println("FINAL HASH IS $hash")
 
             return hash
+        }
+
+
+        fun <T : Any> getCustomPull(clazz: KClass<T>): KormPuller<T>? {
+            val puller = Reflect.findAnnotation<KormCustomPull>(clazz)
+            if (puller != null) return extractFrom(puller.puller)
+
+            val codec = Reflect.findAnnotation<KormCustomCodec>(clazz)
+            if (codec != null) return extractFrom(codec.codec)
+
+            return null
+        }
+
+
+        private fun <T : Any> extractFrom(clazz: KClass<out KormPuller<*>>): KormPuller<T>? {
+            return clazz.let { it.objectInstance ?: it.createInstance() } as? KormPuller<T>
         }
 
     }

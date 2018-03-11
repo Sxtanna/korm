@@ -4,11 +4,13 @@ import com.sxtanna.korm.base.Exec
 import com.sxtanna.korm.base.KormPusher
 import com.sxtanna.korm.data.Reflect
 import com.sxtanna.korm.data.custom.KormCustomCodec
+import com.sxtanna.korm.data.custom.KormCustomPush
 import com.sxtanna.korm.data.custom.KormList
 import com.sxtanna.korm.writer.base.Options
 import com.sxtanna.korm.writer.base.WriterOptions
 import java.io.*
 import java.util.*
+import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 class KormWriter(private val indent: Int, private val options: WriterOptions) {
@@ -251,9 +253,10 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
         fun writeData(inst: Any, named: Boolean = false, listed: Boolean = false) {
             val clazz = inst::class
 
-            val custom = Reflect.findAnnotation<KormCustomCodec>(clazz)
+            val custom = getCustomPush(clazz) as? KormPusher<Any>
 
-            if (custom == null) {
+            if (custom != null) custom.push(inst, this)
+            else {
                 when {
                     Reflect.isBaseType(clazz) -> writeBase(inst)
                     Reflect.isHashType(clazz) -> writeHash(Reflect.toHashable(inst) ?: return)
@@ -299,18 +302,15 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                     }
                 }
             }
-            else {
-                val codec = custom.codec.let { it.objectInstance ?: it.createInstance() } as KormPusher<Any>
-                codec.push(inst, this)
-            }
         }
 
         fun writeFields(inst: Any, props: List<String>? = null) {
             val clazz = inst::class
 
-            val custom = Reflect.findAnnotation<KormCustomCodec>(clazz)
+            val custom = getCustomPush(clazz) as? KormPusher<Any>
 
-            if (custom == null) {
+            if (custom != null) custom.push(inst, this)
+            else {
 
                 val fields = Reflect.access(inst::class)
                 //println("Fields of ${inst::class} are $fields")
@@ -351,10 +351,6 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                     }
                 }
             }
-            else {
-                val codec = custom.codec.let { it.objectInstance ?: it.createInstance() } as KormPusher<Any>
-                codec.push(inst, this)
-            }
 
 
             // legacy
@@ -392,6 +388,22 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                 if (fields.size > 1 && options.trailingCommas) writeComma()
                 indentLess()
             }*/
+        }
+
+
+        fun <T : Any> getCustomPush(clazz: KClass<T>): KormPusher<T>? {
+            val puller = Reflect.findAnnotation<KormCustomPush>(clazz)
+            if (puller != null) return extractFrom(puller.pusher)
+
+            val codec = Reflect.findAnnotation<KormCustomCodec>(clazz)
+            if (codec != null) return extractFrom(codec.codec)
+
+            return null
+        }
+
+
+        private fun <T : Any> extractFrom(clazz: KClass<out KormPusher<*>>): KormPusher<T>? {
+            return clazz.let { it.objectInstance ?: it.createInstance() } as? KormPusher<T>
         }
 
     }
