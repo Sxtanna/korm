@@ -52,6 +52,9 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                 indentLess() // hot fix
                 writeFields(data, Reflect.findAnnotation<KormList>(data::class)?.props?.toList())
             }
+
+            writer.flush()
+            writer.close()
         }
 
 

@@ -6,6 +6,7 @@ import com.sxtanna.korm.writer.KormWriter
 import com.sxtanna.korm.writer.base.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.io.File
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WriterTests {
@@ -128,6 +129,11 @@ class WriterTests {
     @Test
     internal fun testMessage() {
         println(korm.push(Message.Error("This is an error!")))
+    }
+
+    @Test
+    internal fun testFilePush() {
+        korm.push(ArcadeConfig(), File("arcade_config.korm"))
     }
 
 }
