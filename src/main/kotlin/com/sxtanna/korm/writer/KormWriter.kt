@@ -220,19 +220,12 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                     writer.write(inst.toString())
                 }
                 is CharSequence, is UUID -> {
-
                     val string = inst.toString()
-                    val complex = string.any { it.isLetterOrDigit().not() }
+                    val quoted = name.not() || string.any { it.isWhitespace() }
 
-                    if (name) {
-                        if (complex) writer.write("`")
-                        writer.write(inst.toString())
-                        if (complex) writer.write("`")
-                    } else {
-                        writer.write("\"")
-                        writer.write(inst.toString())
-                        writer.write("\"")
-                    }
+                    if (quoted) writer.write("\"")
+                    writer.write(string)
+                    if (quoted) writer.write("\"")
                 }
                 else -> {
                     if (name) writer.write("`")
