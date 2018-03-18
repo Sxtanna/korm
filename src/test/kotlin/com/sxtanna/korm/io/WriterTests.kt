@@ -136,4 +136,13 @@ class WriterTests {
         korm.push(ArcadeConfig(), File("arcade_config.korm"))
     }
 
+    @Test
+    internal fun testComplexStringKey() {
+        val text = korm.push(mapOf("Hello World" to 21, "Goodbye World" to 32))
+        println(text)
+
+        val hash = korm.pull(text).toHash<String, Int>()
+        println(hash)
+    }
+
 }

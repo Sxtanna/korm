@@ -123,7 +123,28 @@ class ReaderTests {
         println("\n")
 
         val complexData = korm.pull(complexText)
+        println(complexData.viewTypes())
         println(complexData.toHashRef<Pair<Int, Int>, String>())
+
+        val text =
+                """
+                    builds: {
+                      Archer: {
+                        tokensArmors: 20
+                        tokensStacks: 20
+                        tokensWeapon: 12
+                        tokensUnique: 30
+                        armors: [0, 1, 2, 3]
+                        stacks: [20, 21]
+                        skills: {
+                        Flame: 1
+                        "Piercing Shot": 1
+                        }
+                      }
+                    }
+                """
+
+        println(korm.pull(text).viewTypes())
 
     }
 
@@ -275,7 +296,6 @@ class ReaderTests {
         val pull1 = korm.pull(text1)
         println(pull1.viewTypes())
     }
-
 
     @Test
     internal fun testMessage() {
