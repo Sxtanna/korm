@@ -5,4 +5,4 @@ import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class KormCustomPull(val puller: KClass<out KormPuller<Any>>)
+annotation class KormCustomPull(val puller: KClass<out KormPuller<*>>)
