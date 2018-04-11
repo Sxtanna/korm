@@ -68,13 +68,15 @@ class KormReader {
             return when {
                 Reflect.isKormType(clazz) -> {
                     val korm = when {
-                        types.size > 1 -> KormType.HashType(Data.none(), types)
-                        else -> types.single()
+                        types.size > 1 -> {
+                            KormType.HashType(Data.none(), types)
+                        }
+                        else -> {
+                            types.single()
+                        }
                     }
 
                     val data = mapKormToType(korm, clazz.java) ?: return null
-                    //println("Data $data is ${data::class} | ${data::class.java.componentType}, ${(data as? Array<Any>)?.first()}")
-
                     Reflect.ensureIs(data, clazz)
                 }
                 else -> {
@@ -83,28 +85,37 @@ class KormReader {
             }
         }
 
-        inline fun <reified T : Any> to() = to(T::class)
+        inline fun <reified T : Any> to(): T? {
+            return to(T::class)
+        }
 
-        fun <T : Any> to(clazz: Class<T>): T? = to(clazz as Type) // who doesn't love enhanced Java Interop?
+        fun <T : Any> to(clazz: Class<T>): T? {
+            return to(clazz as Type) // who doesn't love enhanced Java Interop?
+        }
 
         fun <T : Any> to(type: Type): T? {
-            val clazz = Reflect.nonPrimitive((when (type) {
-                is ParameterizedType -> type.rawType
-                else -> type
-            } as Class<*>).kotlin)
+            val clazzType = when (type) {
+                is ParameterizedType -> {
+                    type.rawType
+                }
+                else -> {
+                    type
+                }
+            }
+            val clazz = Reflect.nonPrimitive((clazzType as Class<*>).kotlin)
 
             return when {
                 Reflect.isKormType(clazz) -> {
-
                     val korm = when {
-                        types.size > 1 -> KormType.HashType(Data.none(), types)
-                        else -> types.single()
+                        types.size > 1 -> {
+                            KormType.HashType(Data.none(), types)
+                        }
+                        else -> {
+                            types.single()
+                        }
                     }
 
-
                     val data = mapKormToType(korm, type) ?: return null
-                    //println("Data $data is ${data::class} | ${data::class.java.componentType}, ${(data as? Array<Any>)?.first()}")
-
                     Reflect.ensureIs(data, clazz) as? T
                 }
                 else -> {
@@ -115,11 +126,12 @@ class KormReader {
 
 
         fun <T : Any> toRef(type: RefType<T>): T? {
-            val type = type.type()
-            return to(type)
+            return to(type.type())
         }
 
-        inline fun <reified T : Any> toRef() = toRef(RefType.of<T>())
+        inline fun <reified T : Any> toRef(): T? {
+            return toRef(RefType.of<T>())
+        }
 
 
         // to a list
@@ -131,7 +143,9 @@ class KormReader {
             return mapListData(type, List::class, clazz.java) as List<T>
         }
 
-        inline fun <reified T : Any> toList() = toList(T::class)
+        inline fun <reified T : Any> toList(): List<T> {
+            return toList(T::class)
+        }
 
 
         fun <T : Any> toListRef(ref: RefType<T>): List<T> {
@@ -142,7 +156,9 @@ class KormReader {
             return mapListData(type, List::class, ref.type()) as List<T>
         }
 
-        inline fun <reified T : Any> toListRef() = toListRef(RefType.of<T>())
+        inline fun <reified T : Any> toListRef(): List<T> {
+            return toListRef(RefType.of())
+        }
 
 
         // to a hash
@@ -154,7 +170,9 @@ class KormReader {
             return mapHashData(type, Map::class, kType.java, vType.java) as Map<K, V>
         }
 
-        inline fun <reified K : Any, reified V : Any> toHash() = toHash(K::class, V::class)
+        inline fun <reified K : Any, reified V : Any> toHash(): Map<K, V> {
+            return toHash(K::class, V::class)
+        }
 
 
         fun <K : Any, V : Any> toHashRef(kRef: RefType<K>, vRef: RefType<V>): Map<K, V> {
@@ -165,18 +183,18 @@ class KormReader {
             return mapHashData(type, Map::class, kRef.type(), vRef.type()) as Map<K, V>
         }
 
-        inline fun <reified K : Any, reified V : Any> toHashRef() = toHashRef(RefType.of<K>(), RefType.of<V>())
+        inline fun <reified K : Any, reified V : Any> toHashRef(): Map<K, V> {
+            return toHashRef(RefType.of(), RefType.of())
+        }
 
 
         fun <T : Any> mapInstance(clazz: KClass<out T>, types: MutableList<KormType> = this.types): T? {
-            //println("Mapping instance of $clazz")
-
             val custom = getCustomPull(clazz)
 
-            if (custom != null) return custom.pull(this, types)
+            if (custom != null) {
+                return custom.pull(this, types)
+            }
             else {
-                //println("Has no codec!")
-
                 val instance = Reflect.newInstance(clazz) ?: return null
 
                 val asList = Reflect.findAnnotation<KormList>(clazz)?.props?.toList()
@@ -187,8 +205,6 @@ class KormReader {
                         types.remove(korm)
 
                         val data = mapKormToType(korm, field.genericType) ?: continue
-                        //println("Data is $data")
-
                         Reflect.assign(field, instance, data)
                     }
                 } else {
@@ -199,7 +215,6 @@ class KormReader {
                     for ((index, field) in fields.withIndex()) {
                         field[instance] = mapDataToType(data[index], field.genericType) ?: continue
                     }
-
                 }
 
                 return instance
@@ -209,28 +224,26 @@ class KormReader {
 
         // korm mappers
         fun mapKormToType(korm: KormType, type: Type): Any? {
-            //println("Mapping $korm to type $type")
-
             return when (korm) {
                 is KormType.BaseType -> {
-
-                    if (type is WildcardType) return mapKormToType(korm, type.upperBounds[0])
+                    if (type is WildcardType) {
+                        return mapKormToType(korm, type.upperBounds[0])
+                    }
 
                     val custom = getCustomPull((type as Class<*>).kotlin)
-                    if (custom != null) return custom.pull(this, mutableListOf(korm))
+                    if (custom != null) {
+                        return custom.pull(this, mutableListOf(korm))
+                    }
 
                     mapDataToType(korm.data, type)
                 }
                 is KormType.ListType -> {
-                    //println("MAPPING A LIST [0]")
-
                     when (type) {
                         is Class<*> -> {
-                            //println("MAPPING A LIST [1]")
-
                             val custom = getCustomPull(type.kotlin)
-                            if (custom != null) return custom.pull(this, mutableListOf(korm))
-
+                            if (custom != null) {
+                                return custom.pull(this, mutableListOf(korm))
+                            }
 
                             if (type.isArray.not()) {
                                 if (Reflect.findAnnotation<KormList>(type.kotlin) != null) {
@@ -239,47 +252,38 @@ class KormReader {
                                 return null
                             }
 
-                            //println("Array type is ${type.componentType}")
                             mapList(korm.data, List::class, type.componentType)?.let { list ->
                                 val list = list as List<Any>
                                 Array(list.size) { list[it] }
                             }
                         }
                         is GenericArrayType -> {
-                            //println("MAPPING A LIST [2]")
-                            val arg = type.genericComponentType
-
-                            mapListData(korm, List::class, arg)
+                            mapListData(korm, List::class, type.genericComponentType)
                         }
                         is WildcardType -> {
-                            //println("MAPPING A LIST [3]")
                             mapKormToType(korm, type.upperBounds[0])
                         }
                         else -> {
-                            //println("MAPPING A LIST [4]")
                             val type = type as ParameterizedType
 
                             val custom = getCustomPull((type.rawType as Class<*>).kotlin)
-                            if (custom != null) return custom.pull(this, mutableListOf(korm))
+                            if (custom != null) {
+                                return custom.pull(this, mutableListOf(korm))
+                            }
 
                             mapListData(korm, (type.rawType as Class<*>).kotlin, type.actualTypeArguments[0])
                         }
                     }
                 }
                 is KormType.HashType -> {
-                    //println("MAPPING A HASH [0]")
-
                     when (type) {
                         is Class<*> -> {
-                            //println("MAPPING A HASH [1]")
                             mapInstance(type.kotlin, korm.data.toMutableList())
                         }
                         is WildcardType -> {
-                            //println("MAPPING A HASH [2]")
                             mapKormToType(korm, type.upperBounds[0])
                         }
                         else -> {
-                            //println("MAPPING A HASH [3]")
                             val type = type as ParameterizedType
 
                             val (kType, vType) = when (type.rawType as Class<*>) {
@@ -289,7 +293,9 @@ class KormReader {
                                 Map.Entry::class.java -> {
                                     String::class.java to type.actualTypeArguments[1]
                                 }
-                                else -> type.actualTypeArguments[0] to type.actualTypeArguments[1]
+                                else -> {
+                                    type.actualTypeArguments[0] to type.actualTypeArguments[1]
+                                }
                             }
 
                             val data = mapHashData(korm, (type.rawType as Class<*>).kotlin, kType, vType)
@@ -305,7 +311,9 @@ class KormReader {
                                         override val value = data?.get("value")
                                     }
                                 }
-                                else -> data
+                                else -> {
+                                    data
+                                }
                             }
                         }
                     }
@@ -313,61 +321,49 @@ class KormReader {
             }
         }
 
+        // why is this not being used??
         fun mapBaseData(korm: KormType.BaseType, clazz: KClass<*>): Any? {
             val custom = getCustomPull(clazz)
-            if (custom != null) return custom.pull(this, mutableListOf(korm))
+            if (custom != null) {
+                return custom.pull(this, mutableListOf(korm))
+            }
 
             return mapData(korm.data, clazz)
         }
 
         fun mapListData(korm: KormType.ListType, clazz: KClass<*>, type: Type): Collection<Any>? {
-            //println("mapListData: korm = [${korm}], clazz = [${clazz}], type = [${type}]")
-
             val data = korm.data.map {
                 mapDataToType(it, type, (it as? KormType)?.key?.type == COMPLEX)
             }
-
-            //println("Data is $data")
 
             return mapList(data, clazz, type)
         }
 
         fun mapHashData(korm: KormType.HashType, clazz: KClass<*>, kType: Type, vType: Type): Map<Any, Any>? {
-            //println("mapHashData: korm = [${korm}], clazz = [${clazz}], kType = [${kType}], vType = [${vType}]")
-
             val data = korm.data.associate {
                 mapDataToType(it.key.data, kType, it.key.type == COMPLEX) to mapKormToType(it, vType)
             }
-
-            //println("HASH DATA IS $data")
 
             return mapHash(data, clazz, kType, vType)
         }
 
 
         fun mapDataToType(data: Any?, type: Type, complex: Boolean = false): Any? {
-            //println("mapDataToType: data = [$data], type = [$type]")
             data ?: return null
 
-            //println("Data is $data ${data::class} $complex")
-
-            if (data is KormType) return mapKormToType(data, type)
+            if (data is KormType) {
+                return mapKormToType(data, type)
+            }
 
             if (data is String && complex) { // ffs here we go... we gotta deserialize complex keys
-                //println("TESTING FOR COMPLEX KEY")
-
-                println("Evaluating complex key $data")
-
-                return read(data).let { it.to<Any>(type) }.apply {
-
-                    //println("RESOLVED DATA IS $this")
-
-                }
+                return read(data).to(type)
             }
 
             when (type) {
                 is Class<*> -> {
-                    if (type.isInstance(data)) return data
+                    if (type.isInstance(data)) {
+                        return data
+                    }
 
                     return if (type.isArray) { // handle array
                         mapList(data, List::class, type.componentType)?.let { list ->
@@ -375,7 +371,6 @@ class KormReader {
                             Array(list.size) { list[it] }
                         }
                     } else {
-
                         mapData(data, type.kotlin)
                     }
                 }
@@ -407,16 +402,22 @@ class KormReader {
                     val typeArgs = type.actualTypeArguments
                     val typeType = (type.rawType as Class<*>).kotlin
 
-                    if (typeType.isInstance(data)) return data
+                    if (typeType.isInstance(data)) {
+                        return data
+                    }
 
                     when {
                         Reflect.isSubType(typeType, Collection::class) -> {
-                            check(Reflect.isListType(data::class)) { "Cannot map $data to list" }
+                            check(Reflect.isListType(data::class)) {
+                                "Cannot map $data to list"
+                            }
 
                             return mapList(data, typeType, typeArgs[0])
                         }
                         Reflect.isSubType(typeType, Map::class) -> {
-                            check(Reflect.isHashType(data::class)) { "Cannot map $data to hash" }
+                            check(Reflect.isHashType(data::class)) {
+                                "Cannot map $data to hash"
+                            }
 
                             return mapHash(data, typeType, typeArgs[0], typeArgs[1])
                         }
@@ -424,20 +425,19 @@ class KormReader {
                 }
             }
 
-            //println("Type doesn't conform at all")
-
             return null
         }
 
 
         // data mappers
         fun <T : Any> mapData(data: Any?, clazz: KClass<T>): T? {
-            //println("mapData: data = [$data], clazz = [$clazz]")
             data ?: return null
 
             val clazz = Reflect.nonPrimitive(clazz)
 
-            if (data is KormType) return mapKormToType(data, clazz.java) as? T
+            if (data is KormType) {
+                return mapKormToType(data, clazz.java) as? T
+            }
 
             when {
                 clazz == UUID::class -> {
@@ -453,37 +453,36 @@ class KormReader {
                     return clazz.cast(data as? Boolean)
                 }
                 Reflect.isSubType(clazz, Number::class) -> {
-                    val number = data as? Number ?: return null
+                    var number = data as? Number ?: return null
 
-                    return clazz.cast(when (clazz) {
-                                          Byte::class -> number.toByte()
-                                          Short::class -> number.toShort()
-                                          Int::class -> number.toInt()
-                                          Long::class -> number.toLong()
-                                          Float::class -> number.toFloat()
-                                          Double::class -> number.toDouble()
-                                          else -> number
-                                      })
+                    // I hate this, change it...
+                    number = when (clazz) {
+                        Byte::class -> number.toByte()
+                        Short::class -> number.toShort()
+                        Int::class -> number.toInt()
+                        Long::class -> number.toLong()
+                        Float::class -> number.toFloat()
+                        Double::class -> number.toDouble()
+                        else -> number
+                    }
+
+                    return clazz.cast(number)
                 }
                 Reflect.isSubType(clazz, Enum::class) -> {
                     return clazz.java.enumConstants.find { (it as Enum<*>).name.equals(data.toString(), true) }
                 }
             }
 
-            //println("FAILED TO MAP DATA $data TO $clazz")
-
             return null
 
         }
 
         fun mapList(data: Any?, clazz: KClass<*>, type: Type): Collection<Any>? {
-            //println("mapList: data = [$data], clazz = [$clazz], type = [$type]")
             data ?: return null
 
             val list = Reflect.findListType(clazz) ?: return null
 
             (data as Collection<*>).forEach {
-
                 val data = it ?: return@forEach
                 val outp = mapDataToType(data, type) ?: return@forEach
 
@@ -494,13 +493,11 @@ class KormReader {
         }
 
         fun mapHash(data: Any?, clazz: KClass<*>, kType: Type, vType: Type): Map<Any, Any>? {
-            //println("mapHash: data = [$data], clazz = [$clazz], kType = [$kType], vType = [$vType]")
             data ?: return null
 
             val hash = Reflect.findHashType(clazz) ?: return null
 
             (data as Map<*, *>).forEach { k, v ->
-
                 val kData = k ?: return@forEach
                 val vData = v ?: return@forEach
 
@@ -510,18 +507,20 @@ class KormReader {
                 hash[kOutP] = vOutP
             }
 
-            //println("FINAL HASH IS $hash")
-
             return hash
         }
 
 
         fun <T : Any> getCustomPull(clazz: KClass<T>): KormPuller<T>? {
             val puller = Reflect.findAnnotation<KormCustomPull>(clazz)
-            if (puller != null) return extractFrom(puller.puller)
+            if (puller != null) {
+                return extractFrom(puller.puller)
+            }
 
             val codec = Reflect.findAnnotation<KormCustomCodec>(clazz)
-            if (codec != null) return extractFrom(codec.codec)
+            if (codec != null) {
+                return extractFrom(codec.codec)
+            }
 
             return null
         }
