@@ -1,12 +1,37 @@
 package com.sxtanna.korm.comp
 
-enum class Type(val map: (Any) -> Any = { it }) {
+enum class Type {
 
-    INT({ (it as? Number)?.toInt() ?: it.toString().toInt() }),
-    DEC({ (it as? Number)?.toDouble() ?: it.toString().toDouble() }),
+    INT {
 
-    BOOL({ (it as? Boolean) ?: it.toString().toBoolean() }),
-    CHAR({ (it as? Char) ?: it.toString().first() }),
+        override fun mapValue(input: Any): Any {
+            return (input as? Number)?.toInt() ?: input.toString().toInt()
+        }
+
+    },
+    DEC {
+
+        override fun mapValue(input: Any): Any {
+            return (input as? Number)?.toDouble() ?: input.toString().toDouble()
+        }
+
+    },
+
+    BOOL {
+
+        override fun mapValue(input: Any): Any {
+            return (input as? Boolean) ?: input.toString().toBoolean()
+        }
+
+    },
+
+    CHAR {
+
+        override fun mapValue(input: Any): Any {
+            return (input as? Char) ?: input.toString().first()
+        }
+
+    },
     TEXT,
 
     COMMA,
@@ -20,5 +45,10 @@ enum class Type(val map: (Any) -> Any = { it }) {
     ASSIGN,
     SYMBOL,
     COMPLEX;
+
+
+    internal open fun mapValue(input: Any): Any {
+        return input
+    }
 
 }
