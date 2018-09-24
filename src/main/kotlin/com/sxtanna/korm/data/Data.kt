@@ -15,6 +15,9 @@ data class Data(val inputData: Any, val type: Type) {
     fun isBoolean() = data is Boolean
 
 
+    fun asNumber() = data as? Number
+
+
     override fun toString(): String {
         return "Data(data=$data, type=$type | ${data::class})"
     }
