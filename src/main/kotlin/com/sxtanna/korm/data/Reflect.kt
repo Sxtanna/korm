@@ -208,32 +208,32 @@ internal object Reflect {
                 val array = data as Array<Any>
 
                 return clazz.cast(when (clazz) {
-                                      ByteArray::class -> {
-                                          ByteArray(array.size) { array[it] as Byte }
-                                      }
-                                      ShortArray::class -> {
-                                          ShortArray(array.size) { array[it] as Short }
-                                      }
-                                      IntArray::class -> {
-                                          IntArray(array.size) { array[it] as Int }
-                                      }
-                                      LongArray::class -> {
-                                          LongArray(array.size) { array[it] as Long }
-                                      }
-                                      FloatArray::class -> {
-                                          FloatArray(array.size) { array[it] as Float }
-                                      }
-                                      DoubleArray::class -> {
-                                          DoubleArray(array.size) { array[it] as Double }
-                                      }
-                                      CharArray::class -> {
-                                          CharArray(array.size) { array[it] as Char }
-                                      }
-                                      BooleanArray::class -> {
-                                          BooleanArray(array.size) { array[it] as Boolean }
-                                      }
-                                      else -> array
-                                  })
+                    ByteArray::class -> {
+                        ByteArray(array.size) { array[it] as Byte }
+                    }
+                    ShortArray::class -> {
+                        ShortArray(array.size) { array[it] as Short }
+                    }
+                    IntArray::class -> {
+                        IntArray(array.size) { array[it] as Int }
+                    }
+                    LongArray::class -> {
+                        LongArray(array.size) { array[it] as Long }
+                    }
+                    FloatArray::class -> {
+                        FloatArray(array.size) { array[it] as Float }
+                    }
+                    DoubleArray::class -> {
+                        DoubleArray(array.size) { array[it] as Double }
+                    }
+                    CharArray::class -> {
+                        CharArray(array.size) { array[it] as Char }
+                    }
+                    BooleanArray::class -> {
+                        BooleanArray(array.size) { array[it] as Boolean }
+                    }
+                    else -> array
+                })
             }
         }
 
