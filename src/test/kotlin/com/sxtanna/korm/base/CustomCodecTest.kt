@@ -18,7 +18,7 @@ data class CustomCodecTest(val name: String) {
                     ?.let { CustomCodecTest(it) }
         }
 
-        override fun push(data: CustomCodecTest?, writer: KormWriter.WriterContext) {
+        override fun push(writer: KormWriter.WriterContext, data: CustomCodecTest?) {
             data ?: return writer.writeData("null")
 
             writer.writeName("names")

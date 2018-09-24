@@ -126,7 +126,7 @@ class LexerTests {
     internal fun testEscapes() {
 
         lex(""" "Hello \"World\"" """)
-        println(lexer.eval())
+        println(lexer.exec())
 
     }
 
@@ -136,7 +136,7 @@ class LexerTests {
     }
 
     private fun assertTokens(vararg tokens: Token) {
-        val actual = lexer.eval().toTypedArray()
+        val actual = lexer.exec().toTypedArray()
 
         println("Comparing - \nExpect:${tokens.joinToString("\n")}\n\nActual:${actual.joinToString("\n")}")
 

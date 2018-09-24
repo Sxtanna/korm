@@ -2,6 +2,8 @@ package com.sxtanna.korm.io
 
 import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.*
+import com.sxtanna.korm.base.custom.CustomBoxed
+import com.sxtanna.korm.base.custom.CustomClass
 import com.sxtanna.korm.writer.KormWriter
 import com.sxtanna.korm.writer.base.Options
 import org.junit.jupiter.api.Test
@@ -309,4 +311,45 @@ class ReaderTests {
         val pull = korm.pull(text)
         println(pull.to(Message::class))
     }
+
+    @Test
+    internal fun testCustomReader() {
+        korm.pullWith<CustomClass> { reader, types ->
+            val x = types.find { it.key.data == "x" }?.let { reader.mapData<Double>(it.asBase()?.data) } ?: return@pullWith null
+            val y = types.find { it.key.data == "y" }?.let { reader.mapData<Double>(it.asBase()?.data) } ?: return@pullWith null
+            val z = types.find { it.key.data == "z" }?.let { reader.mapData<Double>(it.asBase()?.data) } ?: return@pullWith null
+
+            CustomClass(x, y, z)
+        }
+
+        val text0 =
+                """
+                    loc: {
+                        x: 1.0
+                        y: 2.0
+                        z: 3.0
+                    }
+                """
+
+        println(korm.pull(text0).to<CustomBoxed>())
+
+
+        korm.pullWith<CustomClass> { reader, types ->
+            val list = types.firstOrNull()?.asList()?.data ?: return@pullWith null
+
+            val x = list.getOrNull(0)?.let { reader.mapData<Double>(it) } ?: return@pullWith null
+            val y = list.getOrNull(1)?.let { reader.mapData<Double>(it) } ?: return@pullWith null
+            val z = list.getOrNull(2)?.let { reader.mapData<Double>(it) } ?: return@pullWith null
+
+            CustomClass(x, y, z)
+        }
+
+        val text1 =
+                """
+                    [1.0, 2.0, 3.0]
+                """
+
+        println(korm.pull(text1).to<CustomClass>())
+    }
+
 }

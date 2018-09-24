@@ -22,7 +22,7 @@ interface Lang {
             }
         }
 
-        override fun push(data: Lang?, writer: KormWriter.WriterContext) {
+        override fun push(writer: KormWriter.WriterContext, data: Lang?) {
             writer.writeHash(mapOf("name" to data?.name))
         }
 
