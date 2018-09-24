@@ -1,5 +1,6 @@
 package com.sxtanna.korm.reader
 
+import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.Exec
 import com.sxtanna.korm.base.KormPuller
 import com.sxtanna.korm.comp.Type.COMPLEX
@@ -24,6 +25,8 @@ import kotlin.reflect.full.cast
 import kotlin.reflect.full.createInstance
 
 class KormReader {
+
+    internal lateinit var korm: Korm
 
 
     fun read(file: File): ReaderContext {
@@ -477,6 +480,10 @@ class KormReader {
 
         }
 
+        inline fun <reified T : Any> mapData(data: Any?): T? {
+            return mapData(data, T::class)
+        }
+
         fun mapList(data: Any?, clazz: KClass<*>, type: Type): Collection<Any>? {
             data ?: return null
 
@@ -512,6 +519,11 @@ class KormReader {
 
 
         fun <T : Any> getCustomPull(clazz: KClass<T>): KormPuller<T>? {
+            val storedPuller = korm.pullerOf(clazz)
+            if (storedPuller != null) {
+                return storedPuller
+            }
+
             val puller = Reflect.findAnnotation<KormCustomPull>(clazz)
             if (puller != null) {
                 return extractFrom(puller.puller)

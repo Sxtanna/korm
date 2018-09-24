@@ -1,5 +1,8 @@
 package com.sxtanna.korm
 
+import com.sxtanna.korm.base.KormPuller
+import com.sxtanna.korm.base.KormPusher
+import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.RefType
 import com.sxtanna.korm.reader.KormReader
 import com.sxtanna.korm.writer.KormWriter
@@ -10,6 +13,15 @@ import kotlin.reflect.KClass
 class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormWriter()) {
     constructor(reader: KormReader): this(reader, KormWriter())
     constructor(writer: KormWriter): this(KormReader(), writer)
+
+    init {
+        reader.korm = this
+        writer.korm = this
+    }
+
+
+    private val pullers = mutableMapOf<KClass<*>, KormPuller<*>>()
+    private val pushers = mutableMapOf<KClass<*>, KormPusher<*>>()
 
 
     // writer
@@ -81,6 +93,51 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 
     inline fun <reified T : Any> pullRef(reader: Reader): T {
         return pullRef(reader, RefType.of())
+    }
+
+
+    // pull / push
+    fun <T : Any> pullWith(clazz: KClass<T>, puller: KormPuller<T>) {
+        pullers[clazz] = puller
+    }
+
+    fun <T : Any> pushWith(clazz: KClass<T>, pusher: KormPusher<T>) {
+        pushers[clazz] = pusher
+    }
+
+    /**
+     * Dear lord, please don't call [KormPuller.pull]
+     */
+    inline fun <reified T : Any> pullWith(crossinline pull: KormPuller<T>.(reader: KormReader.ReaderContext, types: MutableList<KormType>) -> T?) {
+        pullWith(T::class, object : KormPuller<T> {
+
+            override fun pull(reader: KormReader.ReaderContext, types: MutableList<KormType>): T? {
+                return pull.invoke(this, reader, types)
+            }
+
+        })
+    }
+
+    /**
+     * Dear lord, please don't call [KormPusher.push]
+     */
+    inline fun <reified T : Any> pushWith(crossinline push: KormPusher<T>.(writer: KormWriter.WriterContext, data: T?) -> T?) {
+        pushWith(T::class, object : KormPusher<T> {
+
+            override fun push(writer: KormWriter.WriterContext, data: T?) {
+                push.invoke(this, writer, data)
+            }
+
+        })
+    }
+
+
+    fun <T : Any> pullerOf(clazz: KClass<T>): KormPuller<T>? {
+        return pullers[clazz] as? KormPuller<T>
+    }
+
+    fun <T : Any> pusherOf(clazz: KClass<T>): KormPusher<T>? {
+        return pushers[clazz] as? KormPusher<T>
     }
 
 }

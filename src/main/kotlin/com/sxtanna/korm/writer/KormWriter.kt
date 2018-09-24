@@ -18,6 +18,8 @@ import kotlin.reflect.full.createInstance
 class KormWriter(private val indent: Int, private val options: WriterOptions) {
     constructor() : this(2, Options.min())
 
+    internal lateinit var korm: Korm
+
 
     fun write(data: Any): String {
         return StringWriter().apply { write(data, this) }.toString()
@@ -591,7 +593,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
             @Suppress("UNCHECKED_CAST")
             val custom = getCustomPush(clazz) as? KormPusher<Any>
 
-            if (custom != null) custom.push(inst, this)
+            if (custom != null) custom.push(this, inst)
             else {
                 when {
                     Reflect.isBaseType(clazz) -> {
@@ -678,7 +680,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
             val custom = getCustomPush(clazz) as? KormPusher<Any>
 
             if (custom != null) {
-                custom.push(inst, this)
+                custom.push(this, inst)
             }
             else {
 
@@ -743,9 +745,14 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
 
 
         fun <T : Any> getCustomPush(clazz: KClass<T>): KormPusher<T>? {
-            val puller = Reflect.findAnnotation<KormCustomPush>(clazz)
-            if (puller != null) {
-                return extractFrom(puller.pusher)
+            val storedPusher = korm.pusherOf(clazz)
+            if (storedPusher != null) {
+                return storedPusher
+            }
+
+            val pusher = Reflect.findAnnotation<KormCustomPush>(clazz)
+            if (pusher != null) {
+                return extractFrom(pusher.pusher)
             }
 
             val codec = Reflect.findAnnotation<KormCustomCodec>(clazz)
