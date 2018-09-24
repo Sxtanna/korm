@@ -5,7 +5,7 @@ import com.sxtanna.korm.comp.Type
 data class Data(val inputData: Any, val type: Type) {
 
     val data: Any
-        get() = type.map(inputData)
+        get() = type.mapValue(inputData)
 
 
     fun isNumber() = data is Number
