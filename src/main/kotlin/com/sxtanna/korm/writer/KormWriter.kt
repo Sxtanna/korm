@@ -18,6 +18,7 @@ import kotlin.reflect.full.createInstance
 class KormWriter(private val indent: Int, private val options: WriterOptions) {
     constructor() : this(2, Options.min())
 
+    @Transient
     internal lateinit var korm: Korm
 
 

@@ -26,6 +26,7 @@ import kotlin.reflect.full.createInstance
 
 class KormReader {
 
+    @Transient
     internal lateinit var korm: Korm
 
 
