@@ -11,7 +11,7 @@ internal class Typer(private val input: List<Token>): Exec<List<KormType>> {
     private val types = mutableListOf<KormType>()
 
 
-    override fun eval(): List<KormType> {
+    override fun exec(): List<KormType> {
         val tokens = input.listIterator()
 
         while (tokens.hasNext()) {

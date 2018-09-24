@@ -11,7 +11,7 @@ internal class Lexer(private val input: String): Exec<List<Token>> {
     private val tokens = mutableListOf<Token>()
 
 
-    override fun eval(): List<Token> {
+    override fun exec(): List<Token> {
         if (tokens.isNotEmpty()) return tokens
 
         val stream = CharStream()

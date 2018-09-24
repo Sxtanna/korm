@@ -1,5 +1,6 @@
 package com.sxtanna.korm.writer
 
+import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.Exec
 import com.sxtanna.korm.base.KormPusher
 import com.sxtanna.korm.data.Reflect
@@ -46,7 +47,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
         private var currentIndent = 0
 
 
-        override fun eval() {
+        override fun exec() {
             if (Reflect.isKormType(data::class)) {
                 writeData(data)
             } else {

@@ -39,7 +39,7 @@ class KormReader {
     }
 
     fun read(reader: Reader): ReaderContext {
-        return ReaderContext(reader).apply { eval() }
+        return ReaderContext(reader).apply { exec() }
     }
 
 
@@ -48,13 +48,13 @@ class KormReader {
         private val types = mutableListOf<KormType>()
 
 
-        override fun eval() {
+        override fun exec() {
             val input = reader.buffered().use { it.readText() }
 
             val lexer = Lexer(input)
-            val typer = Typer(lexer.eval())
+            val typer = Typer(lexer.exec())
 
-            types += typer.eval()
+            types += typer.exec()
         }
 
 
