@@ -32,9 +32,245 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
     }
 
     fun write(data: Any, writer: Writer) {
-        WriterContext(data, writer).eval()
+        WriterContext(data, writer).exec()
     }
 
+    fun build(lenient: Boolean = false, block: KormBuilder.() -> Unit): String {
+        return KormBuilder(lenient).apply(block).toString()
+    }
+
+
+    inner class KormBuilder(private val lenient: Boolean) {
+
+        private val text = StringWriter()
+        private val cont = WriterContext(0, text)
+
+        private val record = BuilderRecord()
+
+
+        fun dsl(block: KormDSLBuilder.() -> Unit) {
+            KormDSLBuilder().apply(block)
+        }
+
+
+        fun <T : Any> data(data: T) {
+            data("", data)
+        }
+
+        fun <T : Any> data(name: String, data: T) {
+            val nameIsBlank = name.isBlank()
+            checkIfMoreIsAllowed(nameIsBlank)
+
+            if (nameIsBlank.not()) {
+                cont.writeIndent()
+                cont.writeName(name)
+                record.hasWrittenWithName = true
+            }
+            else {
+                record.hasWrittenWithoutName = true
+            }
+
+            if (nameIsBlank) cont.writeIndent()
+            cont.writeData(data, name.isNotBlank())
+            cont.writeNewLine()
+        }
+
+        fun data(block: KormBuilder.() -> Unit) {
+            data("", block)
+        }
+
+        fun data(name: String, block: KormBuilder.() -> Unit) {
+            val nameIsBlank = name.isBlank()
+            checkIfMoreIsAllowed(nameIsBlank)
+
+            if (nameIsBlank.not()) {
+                cont.writeIndent()
+                cont.writeName(name)
+                record.hasWrittenWithName = true
+            }
+            else {
+                record.hasWrittenWithoutName = true
+            }
+
+            if (nameIsBlank) cont.writeIndent()
+            cont.writeHashOpen()
+
+            cont.writeNewLine()
+
+            cont.indentMore()
+            block()
+            cont.indentLess()
+
+            cont.writeIndent()
+            cont.writeHashClose()
+            cont.writeNewLine()
+        }
+
+
+        fun <T : Any?> list(name: String = "", list: List<T>) {
+            list<T>(name) {
+                addAll(list)
+            }
+        }
+
+        fun <T : Any?> list(name: String = "", vararg list: T) {
+            list<T>(name) {
+                addAll(*list)
+            }
+        }
+
+        fun <K : Any?, V : Any?> hash(name: String = "", hash: Map<K, V>) {
+            hash<K, V>(name) {
+                putAll(hash)
+            }
+        }
+
+
+        fun <T : Any?> list(name: String = "", block: KormListBuilder<T>.() -> Unit) {
+            val nameIsBlank = name.isBlank()
+            checkIfMoreIsAllowed(nameIsBlank)
+
+            if (nameIsBlank.not()) {
+                cont.writeIndent()
+                cont.writeName(name)
+                record.hasWrittenWithName = true
+            }
+            else {
+                record.hasWrittenWithoutName = true
+            }
+
+            val builder = KormListBuilder(block)
+            if (nameIsBlank) cont.writeIndent()
+            cont.writeList(builder.list)
+
+            builder.list.clear()
+
+            cont.writeNewLine()
+        }
+
+        fun <K : Any?, V : Any?> hash(name: String = "", block: KormHashBuilder<K, V>.() -> Unit) {
+            val nameIsBlank = name.isBlank()
+            checkIfMoreIsAllowed(nameIsBlank)
+
+            if (nameIsBlank.not()) {
+                cont.writeIndent()
+                cont.writeName(name)
+                record.hasWrittenWithName = true
+            }
+            else {
+                record.hasWrittenWithoutName = true
+            }
+
+            val builder = KormHashBuilder(block)
+            if (nameIsBlank) cont.writeIndent()
+            cont.writeHash(builder.hash as Map<Any?, Any?>)
+
+            builder.hash.clear()
+
+            cont.writeNewLine()
+        }
+
+
+        private fun checkIfMoreIsAllowed(newNameBlank: Boolean) {
+            if (lenient) return
+
+            if (record.hasWrittenWithoutName) {
+                throw IllegalStateException("You cannot write more data to a document with a loose key")
+            }
+
+            if (record.hasWrittenWithName && newNameBlank) {
+                throw IllegalStateException("You can only write named values into this document")
+            }
+        }
+
+
+        override fun toString(): String {
+            return text.toString()
+        }
+
+
+        inner class KormListBuilder<T : Any?>(block: KormListBuilder<T>.() -> Unit) {
+
+            internal val list = mutableListOf<T>()
+
+            init {
+                block()
+            }
+
+
+            fun add(element: T) = apply {
+                this.list.add(element)
+            }
+
+            fun addAll(vararg element: T) = apply {
+                this.list.addAll(element)
+            }
+
+            fun addAll(collection: Collection<T>) = apply {
+                this.list.addAll(collection)
+            }
+
+        }
+
+        inner class KormHashBuilder<K : Any?, V : Any?>(block: KormHashBuilder<K, V>.() -> Unit) {
+
+            internal val hash = mutableMapOf<K, V>()
+
+            init {
+                block()
+            }
+
+
+            fun put(key: K, value: V) = apply {
+                this.hash[key] = value
+            }
+
+            fun putAll(hash: Map<K, V>) = apply {
+                this.hash.putAll(hash)
+            }
+
+        }
+
+
+
+        inner class KormDSLBuilder {
+
+            operator fun <T : Any> String.invoke(data: T) {
+                data(this, data)
+            }
+
+            operator fun <T : Any?> String.invoke(list: List<T>) {
+                list(this, list)
+            }
+
+            operator fun <T : Any?> String.invoke(vararg element: T) {
+                list(this, *element)
+            }
+
+            operator fun <K : Any?, V : Any?> String.invoke(vararg entry: Pair<K, V>) {
+                hash(this, entry.toMap())
+            }
+
+            operator fun String.invoke(block: KormDSLBuilder.() -> Unit) {
+                data(this) { block() }
+            }
+
+
+            infix fun <T : Any?, O : Any?> T.`_`(other: O): Pair<T, O> {
+                return Pair(this, other)
+            }
+
+        }
+
+
+        private inner class BuilderRecord {
+
+            var hasWrittenWithName = false
+            var hasWrittenWithoutName = false
+
+        }
+
+    }
 
     inner class WriterContext internal constructor(private val data: Any, private val writer: Writer) : Exec<Unit> {
 
