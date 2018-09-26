@@ -121,7 +121,7 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
     /**
      * Dear lord, please don't call [KormPusher.push]
      */
-    inline fun <reified T : Any> pushWith(crossinline push: KormPusher<T>.(writer: KormWriter.WriterContext, data: T?) -> T?) {
+    inline fun <reified T : Any> pushWith(crossinline push: KormPusher<T>.(writer: KormWriter.WriterContext, data: T?) -> Unit) {
         pushWith(T::class, object : KormPusher<T> {
 
             override fun push(writer: KormWriter.WriterContext, data: T?) {
