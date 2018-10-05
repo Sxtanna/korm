@@ -145,4 +145,16 @@ class WriterTests {
         println(hash)
     }
 
+    @Test
+    internal fun testInnerClass() {
+        val inner = InnerClassType()
+
+        repeat(10) {
+            inner.LookItsAnInnerClass(it)
+        }
+
+        val text = korm.push(inner)
+        println(text)
+    }
+
 }

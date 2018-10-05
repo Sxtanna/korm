@@ -4,12 +4,16 @@ import com.sxtanna.korm.base.KormPuller
 import com.sxtanna.korm.base.KormPusher
 import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.RefType
+import com.sxtanna.korm.data.Reflect
 import com.sxtanna.korm.reader.KormReader
 import com.sxtanna.korm.writer.KormWriter
 import java.io.*
 import java.nio.charset.Charset
 import kotlin.reflect.KClass
+import kotlin.reflect.full.allSuperclasses
+import kotlin.reflect.full.superclasses
 
+@Suppress("UNCHECKED_CAST")
 class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormWriter()) {
     constructor(reader: KormReader): this(reader, KormWriter())
     constructor(writer: KormWriter): this(KormReader(), writer)
@@ -25,18 +29,47 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 
 
     // writer
+
+    /**
+     * Push any [data] to it's [Korm] representation as a [String]
+     *
+     * @param data The instance to push
+     * @return The [data] as a Korm string
+     */
     fun push(data: Any): String {
         return this.writer.write(data)
     }
 
+    /**
+     * Push any [data] to it's [Korm] representation into a [File]
+     *
+     * **Wraps [file] in a [FileWriter]**
+     *
+     * @param data The instance to push.
+     * @param file The file to write it to.
+     */
     fun push(data: Any, file: File) {
         this.writer.write(data, file)
     }
 
+    /**
+     * Push any [data] to it's [Korm] representation into a [Writer]
+     *
+     * @param data The instance to push
+     * @param writer The writer to write it to
+     */
     fun push(data: Any, writer: Writer) {
         this.writer.write(data, writer)
     }
 
+    /**
+     * Push any [data] to it's [Korm] representation into an [OutputStream]
+     *
+     * **Wraps [stream] in an [OutputStreamWriter]**
+     *
+     * @param data The instance to push
+     * @param stream The output stream to write it to
+     */
     fun push(data: Any, stream: OutputStream) {
         this.writer.write(data, stream)
     }

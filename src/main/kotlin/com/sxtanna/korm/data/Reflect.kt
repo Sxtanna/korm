@@ -1,5 +1,6 @@
 package com.sxtanna.korm.data
 
+import com.sxtanna.korm.util.Ex
 import sun.misc.Unsafe
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -15,6 +16,7 @@ import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
 
+@Suppress("UNCHECKED_CAST")
 internal object Reflect {
 
     private val unsafe: Unsafe?
@@ -76,33 +78,33 @@ internal object Reflect {
     }
 
 
-    fun fields(clazz: KClass<*>): List<Field> {
+    fun fields(inputClazz: KClass<*>): List<Field> {
         val fields = mutableListOf<Field>()
 
-        var clazz: Class<*>? = clazz.java
+        var clazz: Class<*>? = inputClazz.java
         while (clazz != null) {
             fields.addAll(clazz.declaredFields)
             clazz = clazz.superclass
         }
 
-        fields.removeAll { it.isSynthetic || Modifier.isStatic(it.modifiers) || Modifier.isTransient(it.modifiers) }
+        fields.removeAll { Modifier.isStatic(it.modifiers) || Modifier.isTransient(it.modifiers) }
         fields.forEach { it.isAccessible = true }
 
         return fields
     }
 
-    fun access(clazz: KClass<*>): List<Property> {
+    fun access(inputClazz: KClass<*>): List<Property> {
 
-        val fields = fields(clazz)
+        val fields = fields(inputClazz)
         val kprops = mutableListOf<KProperty<*>>()
 
-        var jClazz: Class<*>? = clazz.java
+        var jClazz: Class<*>? = inputClazz.java
         while (jClazz != null) {
             kprops.addAll(jClazz.kotlin.declaredMemberProperties.filter { prop -> fields.none { it.name == prop.name } })
             jClazz = jClazz.superclass
         }
 
-        kprops.removeAll { it.javaField?.isSynthetic ?: false || it.javaField?.modifiers?.let { Modifier.isStatic(it) || Modifier.isTransient(it) } ?: false }
+        kprops.removeAll { it.javaField?.modifiers?.let { Modifier.isStatic(it) || Modifier.isTransient(it) } ?: false }
 
         return fields.map { Property(it.name).apply { field = it } } + kprops.map { Property(it.name).apply { kprop = it } }
     }
@@ -134,7 +136,39 @@ internal object Reflect {
     inline fun <reified T : Annotation> findAnnotation(on: KClass<*>) = findAnnotation(on, T::class)
 
 
+    fun toListable(any: Any): List<Any?>? {
+        try {
+            if (any::class.java.isArray) {
+                return (any as Array<*>).toList()
+            }
+        } catch (ex: Exception) {
+            Ex.printException(ex, "Failed to convert array data to a list", any::class, any)
+        }
+
+        try {
+            if (any is Collection<*>) {
+                return any.toList()
+            }
+        } catch (ex: Exception) {
+            Ex.printException(ex, "Failed to convert collection data to a list", any::class, any)
+        }
+
+        return null
+    }
+
     fun toHashable(any: Any): Map<Any?, Any?>? {
+        try {
+            if (any::class.java.isArray && any::class.java.componentType.isArray) {
+                val array = any as Array<Array<*>>
+
+                var index = 0
+                return array.associate { index++ to it }
+            }
+        } catch (ex: Exception) {
+            Ex.printException(ex, "Failed to convert 2D array data to a map", any::class, any::class.java.componentType, any)
+        }
+
+
         if (any is Map<*, *>) {
             return any as Map<Any?, Any?>
         }
@@ -147,24 +181,7 @@ internal object Reflect {
             return mapOf("first" to any.first, "second" to any.second)
         }
 
-        if (any::class.java.isArray && any::class.java.componentType.isArray) {
-            val array = any as Array<Array<*>>
 
-            var index = 0
-            return array.associate { index++ to it }
-        }
-
-        return null
-    }
-
-    fun toListable(any: Any): List<Any?>? {
-        if (any is Collection<*>) {
-            return any.toList()
-        }
-
-        if (any::class.java.isArray) {
-            return (any as Array<*>).toList()
-        }
 
         return null
     }
@@ -176,8 +193,7 @@ internal object Reflect {
             clazz == List::class || clazz == Collection::class -> LinkedList()
             clazz == Queue::class -> ArrayDeque()
             Reflect.isSubType(clazz, Set::class) || Reflect.isSubType(clazz, List::class) || Reflect.isSubType(clazz, Queue::class) -> {
-                Reflect.newInstance(clazz) as? MutableCollection<Any>
-                        ?: null //throw IllegalStateException("Idk how to create $clazz :(")
+                Reflect.newInstance(clazz) as? MutableCollection<Any> //throw IllegalStateException("Idk how to create $clazz :(")
             }
             else -> null //throw IllegalStateException("Idk which collection impl to use for $clazz :(")
         }
@@ -187,8 +203,7 @@ internal object Reflect {
         return when {
             clazz == Map::class || clazz == Pair::class || clazz == Map.Entry::class -> LinkedHashMap()
             Reflect.isSubType(clazz, Map::class) -> {
-                Reflect.newInstance(clazz) as? MutableMap<Any, Any>
-                        ?: null //throw IllegalStateException("Idk how to create $clazz :(")
+                Reflect.newInstance(clazz) as? MutableMap<Any, Any> //throw IllegalStateException("Idk how to create $clazz :(")
             }
             else -> null //throw IllegalStateException("Idk which hash impl to use for $clazz :(")
         }
@@ -256,6 +271,9 @@ internal object Reflect {
                 this.field?.isAccessible = value
                 this.kprop?.isAccessible = value
             }
+
+        val isInnerRef: Boolean
+            get() = this.field?.isSynthetic ?: kprop?.javaField?.isSynthetic ?: false
 
         operator fun get(inst: Any): Any? {
             return field?.get(inst) ?: kprop?.getter?.call(inst)

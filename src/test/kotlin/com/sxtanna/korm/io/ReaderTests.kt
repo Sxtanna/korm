@@ -352,4 +352,45 @@ class ReaderTests {
         println(korm.pull(text1).to<CustomClass>())
     }
 
+    @Test
+    internal fun testInnerClass() {
+
+        val text0 =
+                """
+                    inners: [{
+                      data: 0
+                      innerInners: [{ bool: true }, { bool: false }]
+                    }, {
+                      data: 1
+                    }, {
+                      data: 2
+                    }, {
+                      data: 3
+                    }, {
+                      data: 4
+                    }, {
+                      data: 5
+                    }, {
+                      data: 6
+                    }, {
+                      data: 7
+                    }, {
+                      data: 8
+                    }, {
+                      data: 9
+                    }]
+                    """
+
+        val type = korm.pull(text0).to<InnerClassType>()
+        println(type)
+
+        type?.inners?.forEach {
+            it.accessTest()
+
+            it.innerInners?.forEach { inner ->
+                inner.accessTest()
+            }
+        }
+    }
+
 }

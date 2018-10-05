@@ -1,8 +1,7 @@
 package com.sxtanna.korm.data.custom
 
 /**
- * Used to signify that a type should be serialized as a list of values instead of a hash
- *
+ * Classes annotated with this will be pulled and pushed as a list, instead of a hash
  *
  * ```
  * {
@@ -10,11 +9,10 @@ package com.sxtanna.korm.data.custom
  *   date: MONDAY
  * }
  * ```
- * becomes
  *
- * ```
- * ["Name", MONDAY]
- * ```
+ * **becomes**
+ *
+ * ```["Name", MONDAY]```
  *
  * @param props The list of the properties to be serialized in order
  *

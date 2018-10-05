@@ -24,29 +24,54 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.createInstance
 
+/**
+ * This thing literally reads from various sources and spits out korm types
+ */
+@Suppress("UNCHECKED_CAST")
 class KormReader {
 
     @Transient
     internal lateinit var korm: Korm
 
 
+    /**
+     * Creates a [FileReader] from the given [file] and executes a [ReaderContext]
+     */
     fun read(file: File): ReaderContext {
         return read(FileReader(file))
     }
 
+    /**
+     * Creates a [StringReader] from the given [text] and executes a [ReaderContext]
+     */
     fun read(text: String): ReaderContext {
         return read(StringReader(text))
     }
 
+    /**
+     * Creates a [InputStreamReader] from the given [stream] using the given [charset] and executes a [ReaderContext]
+     */
     fun read(stream: InputStream, charset: Charset = Charset.defaultCharset()): ReaderContext {
         return read(InputStreamReader(stream, charset))
     }
 
+    /**
+     * Creates a [ReaderContext] from the given [reader] and executes it
+     */
     fun read(reader: Reader): ReaderContext {
         return ReaderContext(reader).apply { exec() }
     }
 
 
+    /**
+     * Takes information provided by a reader and transforms it into a list of [KormType]
+     *
+     * **Routine Process**
+     * - Lex the input with [Lexer]
+     * - Type the input with [Typer]
+     * - Use list of [KormType] to create usable objects
+     *
+     */
     inner class ReaderContext internal constructor(private val reader: Reader) : Exec<Unit> {
 
         private val types = mutableListOf<KormType>()

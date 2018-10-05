@@ -14,7 +14,10 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
-@Suppress("MemberVisibilityCanBePrivate")
+/**
+ * This other thing literally takes any object and spits out a serialized korm representation
+ */
+@Suppress("MemberVisibilityCanBePrivate", "UNCHECKED_CAST")
 class KormWriter(private val indent: Int, private val options: WriterOptions) {
     constructor() : this(2, Options.min())
 
