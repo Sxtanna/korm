@@ -50,6 +50,7 @@ class KormReader {
     inner class ReaderContext internal constructor(private val reader: Reader) : Exec<Unit> {
 
         private val types = mutableListOf<KormType>()
+        private val cache = mutableMapOf<Type, Any>() // testing out inner class deserialization
 
 
         override fun exec() {
@@ -195,16 +196,26 @@ class KormReader {
         fun <T : Any> mapInstance(clazz: KClass<out T>, types: MutableList<KormType> = this.types): T? {
             val custom = getCustomPull(clazz)
 
-            if (custom != null) {
-                return custom.pull(this, types)
+
+            val instance = if (custom != null) {
+                custom.pull(this, types)
             }
             else {
                 val instance = Reflect.newInstance(clazz) ?: return null
+                cache[clazz.java] = instance
 
                 val asList = Reflect.findAnnotation<KormList>(clazz)?.props?.toList()
 
                 if (asList == null) {
-                    for (field in Reflect.access(clazz)) {
+                    val fields = Reflect.access(clazz)
+                    println(fields.map { it.name })
+
+                    for (field in fields) {
+                        if (field.isInnerRef) {
+                            Reflect.assign(field, instance, cache[field.genericType] ?: continue)
+                            continue
+                        }
+
                         val korm = types.find { it.key.data.toString() == field.name } ?: continue
                         types.remove(korm)
 
@@ -221,8 +232,10 @@ class KormReader {
                     }
                 }
 
-                return instance
+                instance
             }
+
+            return instance
         }
 
 
