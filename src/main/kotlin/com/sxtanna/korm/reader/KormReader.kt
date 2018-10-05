@@ -233,7 +233,6 @@ class KormReader {
 
                 if (asList == null) {
                     val fields = Reflect.access(clazz)
-                    println(fields.map { it.name })
 
                     for (field in fields) {
                         if (field.isInnerRef) {
