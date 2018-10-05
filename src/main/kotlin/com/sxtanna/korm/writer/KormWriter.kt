@@ -688,7 +688,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
             }
             else {
 
-                val fields = Reflect.access(inst::class)
+                val fields = Reflect.access(inst::class).filter { it.isInnerRef.not() }
 
                 if (props != null) {
                     writeList(props.map { name -> fields.find { it.name == name }?.get(inst) })
