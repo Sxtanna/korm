@@ -5,7 +5,7 @@ enum class Type {
     INT {
 
         override fun mapValue(input: Any): Any {
-            return (input as? Number)?.toInt() ?: input.toString().toInt()
+            return (input as? Number)?.toLong() ?: input.toString().toLong()
         }
 
     },
