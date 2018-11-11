@@ -44,6 +44,21 @@ hots: [
 ]
 ```
 
+Getting Korm
+--------
+### Gradle
+```groovy
+compile "com.sxtanna.korm:Korm:+"
+```
+
+### Maven
+```xml
+<dependency>
+    <groupId>com.sxtanna.korm</groupId>
+    <artifactId>Korm</artifactId>
+    <version>LATEST</version>
+</dependency>
+```
 
 Symbols
 --------
