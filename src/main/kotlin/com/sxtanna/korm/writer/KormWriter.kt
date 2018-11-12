@@ -239,6 +239,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
 
 
 
+        @Suppress("RemoveRedundantBackticks")
         inner class KormDSLBuilder {
 
             operator fun <T : Any> String.invoke(data: T) {

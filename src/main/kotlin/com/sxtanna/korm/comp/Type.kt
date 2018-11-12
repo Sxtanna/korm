@@ -2,6 +2,9 @@ package com.sxtanna.korm.comp
 
 enum class Type {
 
+    /**
+     * Represents a whole number, either Byte, Short, Int, or Long
+     */
     INT {
 
         override fun mapValue(input: Any): Any {
@@ -9,6 +12,9 @@ enum class Type {
         }
 
     },
+    /**
+     * Represents a decimal number, either Float or Double
+     */
     DEC {
 
         override fun mapValue(input: Any): Any {
@@ -16,7 +22,9 @@ enum class Type {
         }
 
     },
-
+    /**
+     * Represents a boolean value, either true or false
+     */
     BOOL {
 
         override fun mapValue(input: Any): Any {
@@ -24,7 +32,9 @@ enum class Type {
         }
 
     },
-
+    /**
+     * Represents a single character, ex. 'A'
+     */
     CHAR {
 
         override fun mapValue(input: Any): Any {
@@ -32,18 +42,44 @@ enum class Type {
         }
 
     },
+    /**
+     * Represents a collection of characters, ex. "String"
+     */
     TEXT,
-
+    /**
+     * It's... a comma... ','
+     */
     COMMA,
 
+    /**
+     * Represents the opening of a map/object '{'
+     */
     BRACE_L,
+    /**
+     * Represents the closing of a map/object '}'
+     */
     BRACE_R,
 
+    /**
+     * Represents the opening of a list '['
+     */
     BRACK_L,
+    /**
+     * Represents the closing of a list ']'
+     */
     BRACK_R,
 
+    /**
+     * Connects a key and a value
+     */
     ASSIGN,
+    /**
+     * Represents the key portion of a 'Key: Value' pair
+     */
     SYMBOL,
+    /**
+     * Represents a complex key
+     */
     COMPLEX;
 
 

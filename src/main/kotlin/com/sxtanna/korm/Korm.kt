@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.superclasses
 
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "MemberVisibilityCanBePrivate", "unused")
 class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormWriter()) {
     constructor(reader: KormReader): this(reader, KormWriter())
     constructor(writer: KormWriter): this(KormReader(), writer)
@@ -76,42 +76,109 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 
 
     // reader
+
+    /**
+     * Pull korm data from [file] into a [KormReader.ReaderContext]
+     *
+     * @param file The file to pull from
+     * @return The [KormReader.ReaderContext] with pulled data
+     *
+     * - Fails silently for files that don't exist, or are directories
+     */
     fun pull(file: File): KormReader.ReaderContext {
         return this.reader.read(file)
     }
 
+    /**
+     * Pull korm data from [text] into a [KormReader.ReaderContext]
+     *
+     * @param text The text to pull from
+     * @return The [KormReader.ReaderContext] with pulled data
+     */
     fun pull(text: String): KormReader.ReaderContext {
         return this.reader.read(text)
     }
 
+    /**
+     * Pull korm data from [reader] into a [KormReader.ReaderContext]
+     *
+     * @param reader The reader to pull from
+     * @return The [KormReader.ReaderContext] with pulled data
+     */
     fun pull(reader: Reader): KormReader.ReaderContext {
         return this.reader.read(reader)
     }
 
+    /**
+     * Pull korm data from [stream], using [charset], into a [KormReader.ReaderContext]
+     *
+     * @param stream The stream to pull from
+     * @param charset The charset to use for the stream
+     * @return The [KormReader.ReaderContext] with pulled data
+     */
     fun pull(stream: InputStream, charset: Charset = Charset.defaultCharset()): KormReader.ReaderContext {
         return this.reader.read(stream, charset)
     }
 
 
     // directly
+
+    /**
+     * Pull korm data from [text] and directly create an instance of [to] from it
+     *
+     * @param text The text to pull from
+     * @param to The class type to create
+     *
+     * @return The instance created
+     * @throws IllegalStateException if the instance could not be created
+     */
     fun <T : Any> pull(text: String, to: KClass<T>): T {
         return checkNotNull(pull(text).to(to)) { "Result is null" }
     }
 
+    /**
+     * Pull korm data from [text] and directly create an instance of [T] from it
+     *
+     * @param text The text to pull from
+     *
+     * @return The instance created
+     * @throws IllegalStateException if the instance could not be created
+     */
     inline fun <reified T : Any> pull(text: String): T {
         return pull(text, T::class)
     }
 
+    /**
+     * Pull korm data from [reader] and directly create an instance of [to] from it
+     *
+     * @param reader The reader to pull from
+     * @param to The class type to create
+     *
+     * @return The instance created
+     * @throws IllegalStateException if the instance could not be created
+     */
     fun <T : Any> pull(reader: Reader, to: KClass<T>): T {
         return checkNotNull(pull(reader).to(to)) { "Result is null" }
     }
 
+    /**
+     * Pull korm data from [reader] and directly create an instance of [T] from it
+     *
+     * @param reader The text to pull from
+     *
+     * @return The instance created
+     * @throws IllegalStateException if the instance could not be created
+     */
     inline fun <reified T : Any> pull(reader: Reader): T {
         return pull(reader, T::class)
     }
 
 
     // with reference
+
+    /**
+     *
+     */
     fun <T : Any> pullRef(text: String, to: RefType<T>): T {
         return checkNotNull(pull(text).toRef(to)) { "Result is null" }
     }
@@ -130,6 +197,7 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 
 
     // pull / push
+
     fun <T : Any> pullWith(clazz: KClass<T>, puller: KormPuller<T>) {
         pullers[clazz] = puller
     }

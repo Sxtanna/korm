@@ -125,7 +125,7 @@ internal object Reflect {
         return try {
             clazz.constructors.find { it.parameters.isEmpty() }?.call() ?: unsafe?.allocateInstance(clazz.java) as? T
         } catch (ex: Exception) {
-            ex.printStackTrace(); null
+            null
         }
     }
 

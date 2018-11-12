@@ -36,9 +36,16 @@ class KormReader {
 
     /**
      * Creates a [FileReader] from the given [file] and executes a [ReaderContext]
+     *
+     * - Fails silently for files that don't exist, or are directories
      */
     fun read(file: File): ReaderContext {
-        return read(FileReader(file))
+        return if (file.exists().not() || file.isDirectory) {
+            read("")
+        }
+        else {
+            read(FileReader(file))
+        }
     }
 
     /**
@@ -80,6 +87,7 @@ class KormReader {
 
         override fun exec() {
             val input = reader.buffered().use { it.readText() }
+            if (input.isBlank()) return
 
             val lexer = Lexer(input)
             val typer = Typer(lexer.exec())
@@ -93,25 +101,30 @@ class KormReader {
 
         // directly to a class
         fun <T : Any> to(clazz: KClass<T>): T? {
-            val clazz = Reflect.nonPrimitive(clazz)
+            return try {
+                val clazz = Reflect.nonPrimitive(clazz)
 
-            return when {
-                Reflect.isKormType(clazz) -> {
-                    val korm = when {
-                        types.size > 1 -> {
-                            KormType.HashType(Data.none(), types)
+                when {
+                    Reflect.isKormType(clazz) -> {
+                        val korm = when {
+                            types.size > 1 -> {
+                                KormType.HashType(Data.none(), types)
+                            }
+                            else -> {
+                                types.single()
+                            }
                         }
-                        else -> {
-                            types.single()
-                        }
+
+                        val data = mapKormToType(korm, clazz.java) ?: return null
+                        Reflect.ensureIs(data, clazz)
                     }
-
-                    val data = mapKormToType(korm, clazz.java) ?: return null
-                    Reflect.ensureIs(data, clazz)
+                    else -> {
+                        mapInstance(clazz)
+                    }
                 }
-                else -> {
-                    mapInstance(clazz)
-                }
+            }
+            catch (ignored: Exception) {
+                null
             }
         }
 

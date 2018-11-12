@@ -393,4 +393,14 @@ class ReaderTests {
         }
     }
 
+    @Test
+    internal fun testLongValue() {
+
+        val text0 = "value: ${Long.MAX_VALUE}"
+
+        val type = korm.pull(text0).to<LongValue>()
+        println(type)
+        println("${Long.MAX_VALUE}")
+    }
+
 }

@@ -4,7 +4,10 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Exception
 
-object Ex {
+/**
+ * Don't ask...
+ */
+internal object Ex {
 
     fun printException(exception: Exception, message: String, vararg extraData: Any) {
         println("== Korm Exception =S=")
