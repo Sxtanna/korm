@@ -177,20 +177,29 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
     // with reference
 
     /**
-     *
+     * Pull korm data from [text] and directly create an instance from [to]
      */
     fun <T : Any> pullRef(text: String, to: RefType<T>): T {
         return checkNotNull(pull(text).toRef(to)) { "Result is null" }
     }
 
+    /**
+     * Pull korm data from [text] and directly create an instance of [T]
+     */
     inline fun <reified T : Any> pullRef(text: String): T {
         return pullRef(text, RefType.of())
     }
 
+    /**
+     * Pull korm data from [reader] and directly create an instance from [to]
+     */
     fun <T : Any> pullRef(reader: Reader, to: RefType<T>): T {
         return checkNotNull(pull(reader).toRef(to)) { "Result is null" }
     }
 
+    /**
+     * Pull korm data from [reader] and directly create an instance of [to]
+     */
     inline fun <reified T : Any> pullRef(reader: Reader): T {
         return pullRef(reader, RefType.of())
     }
@@ -198,16 +207,30 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 
     // pull / push
 
+    /**
+     * Set the [KormPuller] for type [T]
+     *
+     * @param clazz The type
+     * @param puller The puller
+     */
     fun <T : Any> pullWith(clazz: KClass<T>, puller: KormPuller<T>) {
         pullers[clazz] = puller
     }
 
+    /**
+     * Set the [KormPusher] for type [T]
+     *
+     * @param clazz The type
+     * @param pusher The pusher
+     */
     fun <T : Any> pushWith(clazz: KClass<T>, pusher: KormPusher<T>) {
         pushers[clazz] = pusher
     }
 
     /**
-     * Dear lord, please don't call [KormPuller.pull]
+     * Set the [KormPuller] for type [T]
+     *
+     * - Dear lord, please don't call [KormPuller.pull]
      */
     inline fun <reified T : Any> pullWith(crossinline pull: KormPuller<T>.(reader: KormReader.ReaderContext, types: MutableList<KormType>) -> T?) {
         pullWith(T::class, object : KormPuller<T> {
@@ -220,7 +243,9 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
     }
 
     /**
-     * Dear lord, please don't call [KormPusher.push]
+     * Set the [KormPusher] for type [T]
+     *
+     * - Dear lord, please don't call [KormPusher.push]
      */
     inline fun <reified T : Any> pushWith(crossinline push: KormPusher<T>.(writer: KormWriter.WriterContext, data: T?) -> Unit) {
         pushWith(T::class, object : KormPusher<T> {
@@ -233,10 +258,22 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
     }
 
 
+    /**
+     * Retrieve the custom pull function for type [T]
+     *
+     * @param clazz The type
+     * @return The [KormPuller] if set, or null
+     */
     fun <T : Any> pullerOf(clazz: KClass<T>): KormPuller<T>? {
         return pullers[clazz] as? KormPuller<T>
     }
 
+    /**
+     * Retrieve the custom push function for type [T]
+     *
+     * @param clazz The type
+     * @return The [KormPusher] if set, or null
+     */
     fun <T : Any> pusherOf(clazz: KClass<T>): KormPusher<T>? {
         return pushers[clazz] as? KormPusher<T>
     }
