@@ -1,5 +1,7 @@
 package com.sxtanna.korm.data
 
+import com.sxtanna.korm.data.KormType.*
+
 /**
  * The three basic key->value types used in Korm
  *
@@ -36,7 +38,7 @@ sealed class KormType {
     data class BaseType(override val key: Data, val data: Any) : KormType() {
 
         override fun toString(): String {
-            return "Base(key=$key, data=$data | ${data::class})"
+            return "Base<${data::class.simpleName}>[\n  k=$key\n  v=$data\n]"
         }
 
     }
@@ -49,7 +51,8 @@ sealed class KormType {
     data class ListType(override val key: Data, val data: List<Any>) : KormType() {
 
         override fun toString(): String {
-            return "List(key=$key, data=${data.joinToString("\n  ", "[\n  ", "\n]")} | ${data::class})"
+            val kormTypes = data.any { it is KormType }
+            return "List<${data::class.simpleName}>[\n  k=$key\n  v=${if (kormTypes) data.joinToString(", ", "\n---", "\n---") else data.toString()}\n]"
         }
 
     }
@@ -67,7 +70,7 @@ sealed class KormType {
     data class HashType(override val key: Data, val data: List<KormType>) : KormType() {
 
         override fun toString(): String {
-            return "Hash(key$key, data=${data.joinToString("\n  ", "[\n  ", "\n]")})"
+            return "\nHash:\nk=$key\nv=\n${data.joinToString("\n")}"
         }
 
     }
