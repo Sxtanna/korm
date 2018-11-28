@@ -19,24 +19,14 @@ import kotlin.reflect.jvm.javaType
 @Suppress("UNCHECKED_CAST")
 internal object Reflect {
 
-    private val unsafe: Unsafe?
+    private val unsafe: Unsafe? = try {
+        val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
+        unsafeField?.isAccessible = true
 
-    init {
-
-        var temp: Unsafe?
-
-        try {
-            val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
-            unsafeField?.isAccessible = true
-
-            temp = unsafeField[null] as Unsafe
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-
-            temp = null
-        }
-
-        unsafe = temp
+        unsafeField[null] as Unsafe
+    } catch (ex: Exception) {
+        ex.printStackTrace()
+        null
     }
 
 
