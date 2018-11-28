@@ -36,7 +36,9 @@ internal class Typer(private val input: List<Token>): Exec<List<KormType>> {
                 BRACK_L -> {
                     add(KormType.ListType(Data.none(), tokens.parseList()))
                 }
-                else -> throw IllegalStateException("Out of place token: $token")
+                else -> {
+                    throw IllegalStateException("Out of place token: $token")
+                }
             }
         }
 
@@ -128,7 +130,9 @@ internal class Typer(private val input: List<Token>): Exec<List<KormType>> {
                 BRACK_L -> {
                     list += KormType.ListType(Data.none(), parseList())
                 }
-                else -> throw IllegalStateException("Token out of place: $next")
+                else -> {
+                    throw IllegalStateException("Token out of place: $next")
+                }
             }
 
         }
@@ -172,7 +176,9 @@ internal class Typer(private val input: List<Token>): Exec<List<KormType>> {
             BRACK_L -> {
                 parseKeyedList(symbol)
             }
-            else -> throw IllegalStateException("Token out of place: $next")
+            else -> {
+                throw IllegalStateException("Token out of place: $next")
+            }
         }
     }
 
