@@ -96,7 +96,9 @@ class KormReader {
         }
 
 
-        fun viewTypes() = types.toList()
+        fun viewTypes(): List<KormType> {
+            return types
+        }
 
 
         // directly to a class
