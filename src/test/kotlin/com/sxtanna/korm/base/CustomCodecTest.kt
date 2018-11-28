@@ -12,7 +12,7 @@ data class CustomCodecTest(val name: String) {
     class Codec : KormCodec<CustomCodecTest> {
 
         override fun pull(reader: KormReader.ReaderContext, types: MutableList<KormType>): CustomCodecTest? {
-            return types.typeByName("names")
+            return types.byName("names")
                     ?.asList()
                     ?.let { it.data[0] as? String }
                     ?.let { CustomCodecTest(it) }
