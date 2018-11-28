@@ -8,6 +8,9 @@ import com.sxtanna.korm.data.Data
 
 internal class Lexer(private val input: String): Exec<List<Token>> {
 
+    private var line = 0
+    private var char = 0
+
     private val tokens = mutableListOf<Token>()
 
 
@@ -19,7 +22,18 @@ internal class Lexer(private val input: String): Exec<List<Token>> {
         stream.forEach {
 
             when(it) {
-                ' ', '\n', '\r' -> return@forEach
+                ' ', '\n', '\r' -> {
+
+                    when(it) {
+                        '\n' -> {
+                            newLine()
+                        }
+                        ' ' -> {
+                            char++
+                        }
+                    }
+                    return@forEach
+                }
                 ',' -> add(COMMA, ",")
                 '{' -> add(BRACE_L, "{")
                 '}' -> add(BRACE_R, "}")
@@ -93,8 +107,19 @@ internal class Lexer(private val input: String): Exec<List<Token>> {
                                 val next = stream.next()
 
                                 if (next.isDigit().not()) {
-                                    if (next == '.') type = DEC else {
+
+                                    if (next == ']' || next == ',' || next == ' ' || next == ':' || next == '\n') {
                                         stream.move(-1)
+                                        break
+                                    }
+
+                                    if (next == '.') type = DEC
+                                    else {
+                                        append(next)
+
+                                        type = SYMBOL
+                                        readSymbol(stream)
+
                                         break
                                     }
                                 }
@@ -104,18 +129,7 @@ internal class Lexer(private val input: String): Exec<List<Token>> {
 
                         }
                         else {
-
-                            while (stream.hasNext) {
-                                val next = stream.next()
-
-                                if (next.isLetterOrDigit().not() && next !in arrayOf('_', '-')) {
-                                    stream.move(-1)
-                                    break
-                                }
-
-                                append(next)
-                            }
-
+                            readSymbol(stream)
                         }
 
                     }
@@ -133,8 +147,29 @@ internal class Lexer(private val input: String): Exec<List<Token>> {
     }
 
 
+    private fun newLine() {
+        char=0
+        line++
+    }
+
+
     private fun add(type: Type, data: String) {
-        tokens += Token(Data(data, type))
+        tokens += Token(line, char, Data(data, type))
+
+        char += data.length
+    }
+
+    private fun StringBuilder.readSymbol(stream: CharStream) {
+        while (stream.hasNext) {
+            val next = stream.next()
+
+            if (next.isLetterOrDigit().not() && next !in arrayOf('_', '-')) {
+                stream.move(-1)
+                break
+            }
+
+            append(next)
+        }
     }
 
 
