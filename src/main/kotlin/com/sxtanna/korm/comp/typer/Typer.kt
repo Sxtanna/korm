@@ -131,7 +131,7 @@ internal class Typer(private val input: List<Token>): Exec<List<KormType>> {
                     list += KormType.ListType(Data.none(), parseList())
                 }
                 else -> {
-                    throw IllegalStateException("Token out of place: $next")
+                    throw IllegalStateException("Out of place token: $next")
                 }
             }
 
@@ -177,7 +177,7 @@ internal class Typer(private val input: List<Token>): Exec<List<KormType>> {
                 parseKeyedList(symbol)
             }
             else -> {
-                throw IllegalStateException("Token out of place: $next")
+                throw IllegalStateException("Out of place token: $next")
             }
         }
     }
