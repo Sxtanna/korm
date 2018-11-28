@@ -26,7 +26,7 @@ interface KormPuller<out T : Any> {
     /**
      * Find a [KormType] with the provided [name], with the option to [remove] it from the given list
      */
-    fun MutableList<KormType>.typeByName(name: String, remove: Boolean = false): KormType? {
+    fun MutableList<KormType>.byName(name: String, remove: Boolean = false): KormType? {
         val korm = find { it.key.data.toString() == name } ?: return null
 
         if (remove) {
