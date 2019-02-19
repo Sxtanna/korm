@@ -552,7 +552,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                 }
                 is CharSequence, is UUID -> {
                     val string = inst.toString()
-                    val quoted = name.not() || string.any { it.isWhitespace() }
+                    val quoted = name.not() || string.any { it.isWhitespace() } || string.any { it == '\'' || it == '"' }
 
                     if (quoted) {
                         writeDoubleQuote()
