@@ -157,4 +157,16 @@ class WriterTests {
         println(text)
     }
 
+    @Test
+    fun testEscapedQuotes() {
+        val thing = object : Any() {
+
+            val text0 = "Hello World"
+            val text1 = "Hello \"World\""
+
+        }
+
+        val text = korm.push(thing)
+        println(text)
+    }
 }

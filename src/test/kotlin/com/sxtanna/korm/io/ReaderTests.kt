@@ -403,4 +403,31 @@ class ReaderTests {
         println("${Long.MAX_VALUE}")
     }
 
+    @Test
+    internal fun testMachines() {
+        val text0 =
+                """
+                    machines: {
+                      `{ x: 92 y: 4 z: 36 w: "24e3bc4d-0231-4163-bcbd-535110cacf5b" }`: "Harvester"
+                    }
+                """.trimIndent()
+
+        val type = korm.pull(text0)
+
+        println(type.viewTypes())
+        println(type.to<MachineFile>())
+    }
+
+    @Test
+    internal fun testEscapedQuotes() {
+
+        val text =
+                """
+                    text0: "Hello World"
+                    text1: "Hello \"World\""
+                """.trimIndent()
+
+        val type = korm.pull(text)
+        println(type.viewTypes().joinToString("\n"))
+    }
 }
