@@ -25,6 +25,10 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
     internal lateinit var korm: Korm
 
 
+    fun context(writer: Writer): WriterContext {
+        return WriterContext(Unit, writer)
+    }
+
     fun write(data: Any): String {
         return StringWriter().apply { write(data, this) }.toString()
     }
@@ -42,7 +46,11 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
     }
 
     fun build(lenient: Boolean = false, block: KormBuilder.() -> Unit): String {
-        return KormBuilder(lenient).apply(block).toString()
+        return builder(lenient, block).toString()
+    }
+
+    fun builder(lenient: Boolean = false, block: KormBuilder.() -> Unit): KormBuilder {
+        return KormBuilder(lenient).apply(block)
     }
 
 

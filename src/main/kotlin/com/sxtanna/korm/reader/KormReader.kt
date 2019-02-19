@@ -27,12 +27,18 @@ import kotlin.reflect.full.createInstance
 /**
  * This thing literally reads from various sources and spits out korm types
  */
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "NAME_SHADOWING", "MemberVisibilityCanBePrivate")
 class KormReader {
 
     @Transient
     internal lateinit var korm: Korm
 
+    /**
+     * Creates a [ReaderContext] for the provided [reader]
+     */
+    fun context(reader: Reader): ReaderContext {
+        return ReaderContext(reader)
+    }
 
     /**
      * Creates a [FileReader] from the given [file] and executes a [ReaderContext]
@@ -66,7 +72,7 @@ class KormReader {
      * Creates a [ReaderContext] from the given [reader] and executes it
      */
     fun read(reader: Reader): ReaderContext {
-        return ReaderContext(reader).apply { exec() }
+        return context(reader).apply { exec() }
     }
 
 
@@ -255,8 +261,18 @@ class KormReader {
                             continue
                         }
 
-                        val korm = types.find { it.key.data.toString() == field.name } ?: continue
-                        types.remove(korm)
+                        val list = if (types.size == 1 && types[0].asHash()?.key?.asString() == "") {
+                            types[0].asHash()?.data
+                        }
+                        else {
+                            types
+                        }
+
+                        val korm = list?.find { it.key.data.toString() == field.name } ?: continue
+
+                        if (list is MutableList) {
+                            list.remove(korm)
+                        }
 
                         val data = mapKormToType(korm, field.genericType) ?: continue
                         Reflect.assign(field, instance, data)
