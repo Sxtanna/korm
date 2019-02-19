@@ -558,7 +558,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                         writeDoubleQuote()
                     }
 
-                    writer.write(string)
+                    writer.write(string.replace("\"", "\\\""))
 
                     if (quoted) {
                         writeDoubleQuote()
