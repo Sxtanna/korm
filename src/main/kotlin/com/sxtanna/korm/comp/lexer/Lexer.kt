@@ -163,7 +163,7 @@ internal class Lexer(private val input: String): Exec<List<Token>> {
         while (stream.hasNext) {
             val next = stream.next()
 
-            if (next.isLetterOrDigit().not() && next !in arrayOf('_', '-')) {
+            if (next.isLetterOrDigit().not() && next !in arrayOf('_', '-', '.')) {
                 stream.move(-1)
                 break
             }
