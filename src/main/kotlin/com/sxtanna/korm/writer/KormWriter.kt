@@ -560,7 +560,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
                 }
                 is CharSequence, is UUID -> {
                     val string = inst.toString()
-                    val quoted = name.not() || string.any { it.isWhitespace() } || string.any { it == '\'' || it == '"' }
+                    val quoted = name.not() || string.shouldBeQuoted()
 
                     if (quoted) {
                         writeDoubleQuote()
@@ -780,6 +780,12 @@ class KormWriter(private val indent: Int, private val options: WriterOptions) {
         @Suppress("UNCHECKED_CAST")
         private fun <T : Any> extractFrom(clazz: KClass<out KormPusher<*>>): KormPusher<T>? {
             return clazz.let { it.objectInstance ?: it.createInstance() } as? KormPusher<T>
+        }
+
+        private fun String.shouldBeQuoted(): Boolean {
+            return any { it.isWhitespace() } ||
+                   any { it == '\'' || it == '"' } ||
+                   any { it == '.' || it == ',' }
         }
 
     }
