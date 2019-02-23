@@ -70,7 +70,7 @@ sealed class KormType {
     data class HashType(override val key: Data, val data: List<KormType>) : KormType() {
 
         override fun toString(): String {
-            return "\nHash:\nk=$key\nv=\n${data.joinToString("\n")}"
+            return "Hash:\nk=$key\nv=\n${data.joinToString("\n")}"
         }
 
     }
