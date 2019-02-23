@@ -7,6 +7,7 @@ import com.sxtanna.korm.writer.base.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WriterTests {
@@ -158,7 +159,7 @@ class WriterTests {
     }
 
     @Test
-    fun testEscapedQuotes() {
+    internal fun testEscapedQuotes() {
         val thing = object : Any() {
 
             val text0 = "Hello World"
@@ -169,4 +170,11 @@ class WriterTests {
         val text = korm.push(thing)
         println(text)
     }
+
+    @Test
+    internal fun testAtomics() {
+        val text0 = korm.push(AtomicInteger(10))
+        println(text0)
+    }
+
 }

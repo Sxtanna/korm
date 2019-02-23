@@ -8,6 +8,7 @@ import com.sxtanna.korm.writer.KormWriter
 import com.sxtanna.korm.writer.base.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.concurrent.atomic.AtomicInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ReaderTests {
@@ -430,4 +431,17 @@ class ReaderTests {
         val type = korm.pull(text)
         println(type.viewTypes().joinToString("\n"))
     }
+
+
+    @Test
+    internal fun testAtomics() {
+        val text =
+                """
+                    10
+                """.trimIndent()
+
+        val type = korm.pull(text)
+        println(type.to<AtomicInteger>())
+    }
+
 }

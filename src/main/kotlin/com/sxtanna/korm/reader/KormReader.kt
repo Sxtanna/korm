@@ -19,7 +19,9 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
 import java.nio.charset.Charset
-import java.util.*
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KClass
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.createInstance
@@ -535,6 +537,8 @@ class KormReader {
                         Long::class -> number.toLong()
                         Float::class -> number.toFloat()
                         Double::class -> number.toDouble()
+                        AtomicInteger::class -> AtomicInteger(number.toInt())
+                        AtomicLong::class -> AtomicLong(number.toLong())
                         else -> number
                     }
 

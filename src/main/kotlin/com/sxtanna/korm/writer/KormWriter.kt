@@ -10,7 +10,7 @@ import com.sxtanna.korm.data.custom.KormList
 import com.sxtanna.korm.writer.base.Options
 import com.sxtanna.korm.writer.base.WriterOptions
 import java.io.*
-import java.util.*
+import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
