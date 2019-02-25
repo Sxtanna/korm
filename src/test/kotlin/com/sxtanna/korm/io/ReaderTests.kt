@@ -66,6 +66,35 @@ class ReaderTests {
         println("\n\n")
         println(korm.push(intNameH))
 
+
+        val quotedNameHText =
+                """
+                    {
+                      "10": 10
+                      "name1": 20
+                    }
+                """.trimIndent()
+
+        val unquotedNameHText =
+                """
+                    {
+                      10: 10
+                      name1: 20
+                    }
+                """.trimIndent()
+
+        val quotedData = korm.pull(quotedNameHText)
+        println(quotedData.viewTypes())
+
+        val unquotedData = korm.pull(unquotedNameHText)
+        println(unquotedData.viewTypes())
+
+
+        println("===========")
+        println(quotedData.toHash<String, Long>())
+        println("\n")
+        println(unquotedData.toHash<String, Long>())
+        println("===========")
     }
 
     @Test
