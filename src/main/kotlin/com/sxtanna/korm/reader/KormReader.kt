@@ -111,6 +111,10 @@ class KormReader {
 
         // directly to a class
         fun <T : Any> to(clazz: KClass<T>): T? {
+            if (types.isEmpty()) {
+                return null
+            }
+
             return try {
                 val clazz = Reflect.nonPrimitive(clazz)
 
@@ -147,6 +151,10 @@ class KormReader {
         }
 
         fun <T : Any> to(type: Type): T? {
+            if (types.isEmpty()) {
+                return null
+            }
+
             val clazzType = when (type) {
                 is ParameterizedType -> {
                     type.rawType
@@ -242,6 +250,10 @@ class KormReader {
 
 
         fun <T : Any> mapInstance(clazz: KClass<out T>, types: MutableList<KormType> = this.types): T? {
+            if (types.isEmpty()) {
+                return null
+            }
+
             val custom = getCustomPull(clazz)
 
 
