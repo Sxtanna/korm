@@ -1,4 +1,4 @@
-# KORM ![Travis (.com)](https://img.shields.io/travis/com/Sxtanna/Korm.svg?style=flat-square) ![Maven Central](https://img.shields.io/maven-central/v/com.sxtanna.korm/Korm.svg?logo=kotlin&style=flat-square)
+# KORM [![Travis](https://img.shields.io/travis/com/Sxtanna/Korm.svg?style=flat-square)](https://travis-ci.com/Sxtanna/KORM) [![Maven Central](https://img.shields.io/maven-central/v/com.sxtanna.korm/Korm.svg?logo=kotlin&style=flat-square)](http://repo1.maven.org/maven2/com/sxtanna/korm/Korm/)
 Kotlin Object-Relational Mapping
 
 
