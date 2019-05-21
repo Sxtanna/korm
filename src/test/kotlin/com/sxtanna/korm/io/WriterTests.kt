@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WriterTests {
 
-    private val korm = Korm(writer = KormWriter(2, Options.of(Options.SPACE_AFTER_ASSIGN, Options.HASH_ENTRY_ON_NEW_LINE)))
+    private val korm = Korm(writer = KormWriter(2, Options.min(Options.COMPLEX_LIST_ENTRY_ON_NEW_LINE)))
 
 
     @Test
