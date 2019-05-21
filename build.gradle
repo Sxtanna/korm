@@ -73,17 +73,20 @@ nexusStaging {
 uploadArchives {
     dependsOn = [clean, signJavadocJar, signSourcesJar, signJar]
 
+    def user = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
+    def pass = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
+
     repositories {
         mavenDeployer {
 
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
             repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
+                authentication(userName: user, password: pass)
             }
 
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
+                authentication(userName: user, password: pass)
             }
 
             pom.project {
