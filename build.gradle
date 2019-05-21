@@ -1,3 +1,10 @@
+plugins {
+    id 'org.jetbrains.dokka' version '0.9.18'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.31'
+    id 'io.codearte.nexus-staging' version '0.21.0'
+}
+
+
 group 'com.sxtanna.korm'
 version '1.6.5'
 
@@ -27,18 +34,17 @@ buildscript {
 
 
 apply plugin: 'maven'
-apply plugin: 'kotlin'
 apply plugin: 'signing'
 apply plugin: 'java-library'
-apply plugin: 'org.jetbrains.dokka'
-apply plugin: 'io.codearte.nexus-staging'
 
 
-repositories.mavenCentral()
+repositories {
+    mavenCentral()
+}
 
 dependencies {
-    compileOnly "org.jetbrains.kotlin:kotlin-reflect:1.3.21"
-    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.21"
+    compileOnly "org.jetbrains.kotlin:kotlin-reflect:1.3.31"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.31"
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.junit.jupiter:junit-jupiter-engine:5.0.1'
