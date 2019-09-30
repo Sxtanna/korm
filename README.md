@@ -1,4 +1,4 @@
-# KORM
+# KORM [![Maven Central](https://img.shields.io/maven-central/v/com.sxtanna.korm/Korm.svg?logo=kotlin&style=flat-square)](http://repo1.maven.org/maven2/com/sxtanna/korm/Korm/) [![Travis](https://img.shields.io/travis/com/Sxtanna/KORM.svg?style=flat-square)](https://travis-ci.com/Sxtanna/KORM) [![GitHub](https://img.shields.io/github/license/Sxtanna/KORM.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 Kotlin Object-Relational Mapping
 
 
