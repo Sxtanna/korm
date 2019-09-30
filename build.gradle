@@ -1,7 +1,7 @@
 plugins {
-    id 'org.jetbrains.dokka' version '0.9.18'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.31'
-    id 'io.codearte.nexus-staging' version '0.21.0'
+	id 'org.jetbrains.dokka' version '0.9.18'
+	id 'org.jetbrains.kotlin.jvm' version '1.3.50'
+	id 'io.codearte.nexus-staging' version '0.21.1'
 }
 
 
@@ -15,108 +15,111 @@ apply plugin: 'java-library'
 
 
 repositories {
-    jcenter()
-    mavenCentral()
+	jcenter()
+	mavenCentral()
 }
 
 dependencies {
-    compileOnly "org.jetbrains.kotlin:kotlin-reflect:1.3.31"
-    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.31"
-
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.junit.jupiter:junit-jupiter-engine:5.0.1'
+	compileOnly "org.jetbrains.kotlin:kotlin-reflect:1.3.50"
+	compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.50"
+	
+	testCompile "org.junit.jupiter:junit-jupiter-engine:5.4.2"
+	testRuntime "org.junit.jupiter:junit-jupiter-engine:5.4.2"
 }
 
 
 sourceSets {
-    test.compileClasspath += configurations.compileOnly
+	test.compileClasspath += configurations.compileOnly
+	test.runtimeClasspath += configurations.compileOnly
+}
+
+test {
+	useJUnitPlatform()
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions.jvmTarget = "1.8"
+	kotlinOptions.jvmTarget = "1.8"
 }
 
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+	classifier = 'sources'
+	from sourceSets.main.allSource
 }
 task javadocJar(type: Jar, dependsOn: dokka) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
+	classifier = 'javadoc'
+	from javadoc.destinationDir
 }
 
 
 dokka {
-    outputFormat = 'javadoc'
-    outputDirectory = javadoc.destinationDir
+	outputFormat = 'javadoc'
+	outputDirectory = javadoc.destinationDir
 }
 
 artifacts {
-    archives sourcesJar
-    archives javadocJar
+	archives sourcesJar
+	archives javadocJar
 }
 
 signing {
-    required { gradle.taskGraph.hasTask('uploadArchives') }
-
-    sign jar
-    sign sourcesJar
-    sign javadocJar
+	required { gradle.taskGraph.hasTask('uploadArchives') }
+	
+	sign jar
+	sign sourcesJar
+	sign javadocJar
 }
 
 nexusStaging {
-    packageGroup = 'com.sxtanna'
+	packageGroup = 'com.sxtanna'
 }
 
 
 uploadArchives {
-    dependsOn = [clean, signJavadocJar, signSourcesJar, signJar]
-
-    def user = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
-    def pass = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
-
-    repositories {
-        mavenDeployer {
-
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: user, password: pass)
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: user, password: pass)
-            }
-
-            pom.project {
-                name project.name
-                description "Kotlin Object-Relational Mapping"
-                url "https://github.com/Sxtanna/KORM"
-
-                scm {
-                    connection 'scm:git:git://github.com/Sxtanna/KORM.git'
-                    developerConnection 'scm:git:git://github.com/Sxtanna/KORM.git'
-                    url 'https://github.com/Sxtanna/KORM.git'
-                }
-
-                licenses {
-                    license {
-                        name = 'MIT License'
-                        url = 'http://www.opensource.org/licenses/mit-license.php'
-                    }
-                }
-
-                developers {
-                    developer {
-                        name 'Sxtanna'
-                        email 'me@sxtanna.com'
-                    }
-                }
-
-            }
-
-        }
-    }
-
+	dependsOn = [clean, signJavadocJar, signSourcesJar, signJar]
+	
+	def user = project.hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
+	def pass = project.hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
+	
+	repositories {
+		mavenDeployer {
+			
+			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+			
+			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+				authentication(userName: user, password: pass)
+			}
+			
+			snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+				authentication(userName: user, password: pass)
+			}
+			
+			pom.project {
+				name project.name
+				description "Kotlin Object-Relational Mapping"
+				url "https://github.com/Sxtanna/KORM"
+				
+				scm {
+					connection 'scm:git:git://github.com/Sxtanna/KORM.git'
+					developerConnection 'scm:git:git://github.com/Sxtanna/KORM.git'
+					url 'https://github.com/Sxtanna/KORM.git'
+				}
+				
+				licenses {
+					license {
+						name = 'MIT License'
+						url = 'http://www.opensource.org/licenses/mit-license.php'
+					}
+				}
+				
+				developers {
+					developer {
+						name 'Sxtanna'
+						email 'me@sxtanna.com'
+					}
+				}
+			}
+		}
+	}
+	
 }

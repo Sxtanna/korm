@@ -4,7 +4,7 @@ import com.sxtanna.korm.comp.Token
 import com.sxtanna.korm.comp.Type
 import com.sxtanna.korm.comp.lexer.Lexer
 import com.sxtanna.korm.data.Data
-import org.junit.Assert.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
