@@ -7,11 +7,12 @@ import com.sxtanna.korm.writer.KormWriter
  *
  *  - Should properly override [push] to produce valid korm data
  */
-interface KormPusher<in T : Any> {
-
-    /**
-     * Create korm data with the given [writer] from the provided [data]
-     */
-    fun push(writer: KormWriter.WriterContext, data: T?)
-
+interface KormPusher<in T : Any>
+{
+	
+	/**
+	 * Create korm data with the given [writer] from the provided [data]
+	 */
+	fun push(writer: KormWriter.WriterContext, data: T?)
+	
 }
