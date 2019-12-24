@@ -1,8 +1,6 @@
 package com.sxtanna.korm.data
 
-import com.sxtanna.korm.data.KormType.BaseType
-import com.sxtanna.korm.data.KormType.HashType
-import com.sxtanna.korm.data.KormType.ListType
+import com.sxtanna.korm.data.KormType.*
 
 /**
  * The three basic key->value types used in Korm
@@ -45,12 +43,12 @@ sealed class KormType
 		{
 			val text =
 				"""
-					Base<${data::class.simpleName ?: "Unknown"}>
-						[
-							k=$key
-							v=$data
-						]
-				""".trimIndent()
+				|Base<${data::class.simpleName ?: "Unknown"}>
+				|[
+				|	k=$key
+				|	v=$data
+				|]
+				""".trimMargin()
 			return text
 		}
 		
@@ -122,12 +120,12 @@ sealed class KormType
 			}
 			val text =
 				"""
-					List<${data::class.simpleName}>
-					[
-						k=$key
-						v=$list
-					]
-				""".trimIndent()
+				|List<${data::class.simpleName}>
+				|[
+				|	k=$key
+				|	v=$list
+				|]
+				""".trimMargin()
 			return text
 		}
 		
@@ -156,11 +154,11 @@ sealed class KormType
 		{
 			val text =
 				"""
-					Hash<$key>
-					{
-						${data.joinToString("\n")}
-					}
-				""".trimIndent()
+				|Hash<$key>
+				|{
+				|${data.joinToString("\n")}
+				|}
+				""".trimMargin()
 			return text
 		}
 		
