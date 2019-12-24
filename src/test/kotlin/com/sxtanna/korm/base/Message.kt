@@ -29,9 +29,9 @@ sealed class Message
 		
 		override fun pull(reader: KormReader.ReaderContext, types: MutableList<KormType>): Message?
 		{
-			val name = types.find { it.key.data == "name" } ?: return null
+			val name = types.byName("name") ?: return null
 			
-			return when (name.asBase()?.data ?: return null)
+			return when (name.asBase()?.dataAsString() ?: return null)
 			{
 				"Join"  ->
 				{

@@ -1,5 +1,6 @@
 package com.sxtanna.korm.io
 
+import com.google.gson.Gson
 import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.*
 import com.sxtanna.korm.base.custom.CustomBoxed
@@ -9,6 +10,7 @@ import com.sxtanna.korm.writer.KormWriter
 import com.sxtanna.korm.writer.base.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -364,8 +366,6 @@ class ReaderTests
 	internal fun testCustomReader()
 	{
 		korm.pullWith<CustomClass> { reader, types ->
-			println(types)
-			
 			val x = types.find { it.key.data == "x" }?.let { reader.mapData<Double>(it.asBase()?.data) } ?: return@pullWith null
 			val y = types.find { it.key.data == "y" }?.let { reader.mapData<Double>(it.asBase()?.data) } ?: return@pullWith null
 			val z = types.find { it.key.data == "z" }?.let { reader.mapData<Double>(it.asBase()?.data) } ?: return@pullWith null
@@ -383,6 +383,7 @@ class ReaderTests
                 """
 		
 		println(korm.pull(text0).to<CustomBoxed>())
+		println(korm.pull(text0).viewTypesAsString())
 		
 		
 		korm.pullWith<CustomClass> { reader, types ->
@@ -512,6 +513,38 @@ class ReaderTests
 		
 		val thing = korm.pull(text)
 		println(thing.to<StupidThing>())
+	}
+	
+	@Test
+	internal fun testTransientDelegate()
+	{
+		val data0 = korm.pull("""name: Portal0 args: "" uuid: ${UUID.randomUUID()} type: UNKNOWN vecs: [] """).to<Portal>()
+		try
+		{
+			println(data0)
+			
+			println("Printing delegate for 0")
+			println(data0?.copy()?.delegate)
+		}
+		catch (ex: Exception)
+		{
+		
+		}
+		
+		
+		val data1 = Gson().fromJson("""{"name": "Portal0"}""", Portal::class.java)
+		
+		try
+		{
+			println(data1)
+			
+			println("Printing delegate for 1")
+			println(data1?.delegate)
+		}
+		catch (ex: Exception)
+		{
+		
+		}
 	}
 	
 }
