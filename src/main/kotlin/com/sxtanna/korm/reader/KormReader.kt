@@ -8,15 +8,18 @@ import com.sxtanna.korm.comp.lexer.Lexer
 import com.sxtanna.korm.comp.typer.Typer
 import com.sxtanna.korm.data.Data
 import com.sxtanna.korm.data.KormType
-import com.sxtanna.korm.data.KormType.BaseType
-import com.sxtanna.korm.data.KormType.HashType
-import com.sxtanna.korm.data.KormType.ListType
+import com.sxtanna.korm.data.KormType.*
 import com.sxtanna.korm.data.RefType
 import com.sxtanna.korm.data.custom.KormCustomCodec
 import com.sxtanna.korm.data.custom.KormCustomPull
 import com.sxtanna.korm.data.custom.KormList
 import com.sxtanna.korm.util.Reflect
-import java.io.*
+import java.io.File
+import java.io.FileReader
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.Reader
+import java.io.StringReader
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -28,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KClass
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.full.safeCast
 
 /**
  * This thing literally reads from various sources and spits out korm types
@@ -120,6 +124,11 @@ class KormReader
 		fun viewTypes(): List<KormType>
 		{
 			return types
+		}
+		
+		fun viewTypesAsString(): String
+		{
+			return viewTypes().joinToString("\n")
 		}
 		
 		
@@ -687,6 +696,13 @@ class KormReader
 			}
 			
 			return hash
+		}
+		
+		
+		// type helpers
+		inline fun <reified T : Any> KormType?.map(): T?
+		{
+			return T::class.safeCast(mapKormToType(this ?: return null, T::class.java))
 		}
 		
 		
