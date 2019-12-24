@@ -22,24 +22,19 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 		val stream = CharStream()
 		
 		stream.forEach {
-			
 			when (it)
 			{
-				' ', '\n', '\r' ->
+				' '             ->
 				{
-					
-					when (it)
-					{
-						'\n' ->
-						{
-							newLine()
-						}
-						' '  ->
-						{
-							char++
-						}
-					}
-					return@forEach
+					char++
+				}
+				'\n'            ->
+				{
+					newLine()
+				}
+				'\r'            ->
+				{
+					// do nothing
 				}
 				','             -> add(COMMA, ",")
 				'{'             -> add(BRACE_L, "{")
