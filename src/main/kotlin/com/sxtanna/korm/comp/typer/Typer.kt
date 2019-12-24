@@ -70,7 +70,7 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 			"Token isn't a boolean type: $token"
 		}
 		
-		return checkNotNull(token.data.data as? Boolean)
+		return checkNotNull(token.data.asBoolean())
 	}
 	
 	private fun parseNumber(token: Token): Number
@@ -79,7 +79,7 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 			"Token isn't a number type: $token"
 		}
 		
-		return checkNotNull(token.data.data as? Number)
+		return checkNotNull(token.data.asNumber())
 	}
 	
 	private fun parseQuoted(token: Token): Any
