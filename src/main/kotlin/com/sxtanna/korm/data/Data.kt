@@ -69,7 +69,7 @@ data class Data(@Transient val inputData: Any, val type: Type)
 		/**
 		 * empty [Data] for usage as object headers
 		 */
-		fun none() = Data("", Type.TEXT)
+		internal fun none() = Data("", Type.TEXT)
 		
 	}
 	
