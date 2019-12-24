@@ -45,4 +45,7 @@ class WriterOptions internal constructor(private val options: Set<Options>)
 	val complexListEntryOnNewLine: Boolean
 		get() = Options.COMPLEX_LIST_ENTRY_ON_NEW_LINE in options
 	
+	val includeComments: Boolean
+		get() = Options.INCLUDE_COMMENTS in options
+	
 }

@@ -3,13 +3,20 @@ package com.sxtanna.korm.writer
 import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.Exec
 import com.sxtanna.korm.base.KormPusher
+import com.sxtanna.korm.data.custom.KormComment
 import com.sxtanna.korm.data.custom.KormCustomCodec
 import com.sxtanna.korm.data.custom.KormCustomPush
 import com.sxtanna.korm.data.custom.KormList
 import com.sxtanna.korm.util.Reflect
 import com.sxtanna.korm.writer.base.Options
 import com.sxtanna.korm.writer.base.WriterOptions
-import java.io.*
+import java.io.File
+import java.io.FileWriter
+import java.io.OutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.io.Writer
 import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
@@ -890,89 +897,130 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			
 			if (custom != null)
 			{
-				custom.push(this, inst)
+				return custom.push(this, inst)
+			}
+			
+			if (options.includeComments)
+			{
+				val comment = Reflect.findAnnotation<KormComment>(clazz)
+				
+				if (comment != null && comment.comment.isNotEmpty())
+				{
+					if (comment.comment.size == 1)
+					{
+						writer.write("// ${comment.comment[0]}\n")
+					}
+					else
+					{
+						writer.write("/**\n")
+						for (line in comment.comment)
+						{
+							writer.write(" * $line\n")
+						}
+						writer.write(" */\n")
+					}
+				}
+			}
+			
+			val fields = Reflect.access(inst::class).filter { it.isInnerRef.not() }
+			
+			if (props != null)
+			{
+				writeList(props.map { name -> fields.find { it.name == name }?.get(inst) })
 			}
 			else
 			{
-				
-				val fields = Reflect.access(inst::class).filter { it.isInnerRef.not() }
-				
-				if (props != null)
+				if (fields.isNotEmpty())
 				{
-					writeList(props.map { name -> fields.find { it.name == name }?.get(inst) })
+					indentMore()
 				}
-				else
+				
+				for ((index, field) in fields.withIndex())
 				{
-					if (fields.isNotEmpty())
+					
+					val name = field.name
+					val data = field[inst] ?: continue
+					
+					if (options.includeComments)
 					{
-						indentMore()
+						val comment = field[KormComment::class]
+						
+						if (comment != null && comment.comment.isNotEmpty())
+						{
+							if (comment.comment.size == 1)
+							{
+								writer.write("// ${comment.comment[0]}\n")
+							}
+							else
+							{
+								writer.write("/**\n")
+								for (line in comment.comment)
+								{
+									writer.write(" * $line\n")
+								}
+								writer.write(" */\n")
+							}
+						}
 					}
 					
-					for ((index, field) in fields.withIndex())
+					if (writingName)
 					{
-						
-						val name = field.name
-						val data = field[inst] ?: continue
+						if (options.complexKeyEntryOnNewLine)
+						{
+							writeIndent()
+						}
+					}
+					else
+					{
+						if (options.hashEntryOnNewLine)
+						{
+							writeIndent()
+						}
+					}
+					
+					writeName(name)
+					writeData(data, true)
+					
+					if (index < fields.lastIndex)
+					{
+						if (options.commaAfterHashEntry)
+						{
+							writeComma()
+						}
 						
 						if (writingName)
 						{
 							if (options.complexKeyEntryOnNewLine)
 							{
-								writeIndent()
+								writeNewLine()
+							}
+							else
+							{
+								writeSpace()
 							}
 						}
 						else
 						{
 							if (options.hashEntryOnNewLine)
 							{
-								writeIndent()
-							}
-						}
-						
-						writeName(name)
-						writeData(data, true)
-						
-						if (index < fields.lastIndex)
-						{
-							if (options.commaAfterHashEntry)
-							{
-								writeComma()
-							}
-							
-							if (writingName)
-							{
-								if (options.complexKeyEntryOnNewLine)
-								{
-									writeNewLine()
-								}
-								else
-								{
-									writeSpace()
-								}
+								writeNewLine()
 							}
 							else
 							{
-								if (options.hashEntryOnNewLine)
-								{
-									writeNewLine()
-								}
-								else
-								{
-									writeSpace()
-								}
+								writeSpace()
 							}
 						}
 					}
-					
-					if (fields.isNotEmpty())
+				}
+				
+				if (fields.isNotEmpty())
+				{
+					if (options.trailingCommas && fields.size > 1)
 					{
-						if (options.trailingCommas && fields.size > 1)
-						{
-							writeComma()
-						}
-						
-						indentLess()
+						writeComma()
 					}
+					
+					indentLess()
 				}
 			}
 		}

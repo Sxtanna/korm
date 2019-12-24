@@ -4,13 +4,18 @@ import sun.misc.Unsafe
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
-import java.util.*
-import kotlin.collections.LinkedHashSet
+import java.util.ArrayDeque
+import java.util.LinkedHashMap
+import java.util.LinkedList
+import java.util.Queue
+import java.util.UUID
+import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.jvm.isAccessible
@@ -104,13 +109,16 @@ internal object Reflect
 	fun access(inputClazz: KClass<*>): List<Property>
 	{
 		
-		val fields = fields(inputClazz)
 		val kprops = mutableListOf<KProperty<*>>()
+		val fields = fields(inputClazz).toMutableList()
 		
 		var jClazz: Class<*>? = inputClazz.java
 		while (jClazz != null)
 		{
-			kprops.addAll(jClazz.kotlin.declaredMemberProperties.filter { prop -> fields.none { it.name == prop.name } })
+			val props = jClazz.kotlin.declaredMemberProperties
+			fields.removeIf { field -> props.any { it.name == field.name } }
+			
+			kprops.addAll(props)
 			jClazz = jClazz.superclass
 		}
 		
@@ -155,14 +163,9 @@ internal object Reflect
 		}
 	}
 	
-	fun <T : Annotation> findAnnotation(on: KClass<*>, clazz: KClass<T>): T?
+	inline fun <reified T : Annotation> findAnnotation(on: KAnnotatedElement): T?
 	{
-		return on.java.getAnnotation(clazz.java)
-	}
-	
-	inline fun <reified T : Annotation> findAnnotation(on: KClass<*>): T?
-	{
-		return findAnnotation(on, T::class)
+		return on.findAnnotation()
 	}
 	
 	
@@ -392,7 +395,12 @@ internal object Reflect
 		
 		operator fun set(inst: Any, data: Any): Unit?
 		{
-			return field?.set(inst, data) ?: (kprop as? KMutableProperty<*>)?.setter?.call(inst, data)
+			return field?.set(inst, data) ?: (kprop as? KMutableProperty<*>)?.setter?.call(inst, data) ?: kprop?.javaField?.set(inst, data)
+		}
+		
+		inline operator fun <reified A : Annotation> get(annotation: KClass<A>): A?
+		{
+			return kprop?.let { findAnnotation<A>(it) } ?: field?.getAnnotation(annotation.java)
 		}
 		
 	}

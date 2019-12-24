@@ -1,7 +1,20 @@
 package com.sxtanna.korm.io
 
 import com.sxtanna.korm.Korm
-import com.sxtanna.korm.base.*
+import com.sxtanna.korm.base.ArcadeConfig
+import com.sxtanna.korm.base.AsListType
+import com.sxtanna.korm.base.Commented
+import com.sxtanna.korm.base.CustomCodecTest
+import com.sxtanna.korm.base.InnerClassType
+import com.sxtanna.korm.base.Level
+import com.sxtanna.korm.base.LevelCache
+import com.sxtanna.korm.base.Message
+import com.sxtanna.korm.base.Numb
+import com.sxtanna.korm.base.Rel
+import com.sxtanna.korm.base.Thing
+import com.sxtanna.korm.base.TransientTest
+import com.sxtanna.korm.base.Vec
+import com.sxtanna.korm.base.Word
 import com.sxtanna.korm.base.stupid.StupidThing
 import com.sxtanna.korm.writer.KormWriter
 import com.sxtanna.korm.writer.base.Options
@@ -229,6 +242,34 @@ class WriterTests
 		
 		val text2 = korm.push(UnsupportedOperationException("Hi!"))
 		println(text2)
+	}
+	
+	@Test
+	internal fun testCommented()
+	{
+		println(korm.push(Commented("Hello!", 20)))
+		
+		val text =
+			"""
+				/**
+				 * This is the comment's age!
+				 * It means nothing
+				 */
+				age: 20
+				// This is commented!!
+				name: "Hello!"
+			""".trimIndent()
+		
+		val reader = korm.pull(text)
+		val commented = reader.to<Commented>() ?: return
+		
+		if (commented.thing == null)
+		{
+			commented.thing = "Optional argument"
+		}
+		
+		println(commented)
+		println(korm.push(commented))
 	}
 	
 }

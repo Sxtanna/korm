@@ -48,7 +48,11 @@ enum class Options
 	 *
 	 * @sample [complexListEntryOnNewLine]
 	 */
-	COMPLEX_LIST_ENTRY_ON_NEW_LINE;
+	COMPLEX_LIST_ENTRY_ON_NEW_LINE,
+	/**
+	 * Will write the comments found from [KormComment] annotations
+	 */
+	INCLUDE_COMMENTS;
 	
 	
 	companion object
@@ -65,7 +69,7 @@ enum class Options
 		fun max() = of(*values())
 		
 		@JvmStatic
-		fun min(vararg options: Options) = of(SPACE_AFTER_ASSIGN, HASH_ENTRY_ON_NEW_LINE, COMPLEX_LIST_ENTRY_ON_NEW_LINE, *options)
+		fun min(vararg options: Options) = of(SPACE_AFTER_ASSIGN, HASH_ENTRY_ON_NEW_LINE, COMPLEX_LIST_ENTRY_ON_NEW_LINE, INCLUDE_COMMENTS, *options)
 		
 	}
 	
