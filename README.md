@@ -1,5 +1,29 @@
-# KORM [![Maven Central](https://img.shields.io/maven-central/v/com.sxtanna.korm/Korm.svg?logo=kotlin&style=flat-square)](http://repo1.maven.org/maven2/com/sxtanna/korm/Korm/) [![Travis](https://img.shields.io/travis/com/Sxtanna/KORM.svg?style=flat-square)](https://travis-ci.com/Sxtanna/KORM) [![GitHub](https://img.shields.io/github/license/Sxtanna/KORM.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-Kotlin Object-Relational Mapping
+[![Maven Central](https://img.shields.io/maven-central/v/com.sxtanna.korm/Korm.svg?logo=kotlin&style=flat-square)](http://repo1.maven.org/maven2/com/sxtanna/korm/Korm/) [![Travis](https://img.shields.io/travis/com/Sxtanna/KORM.svg?style=flat-square)](https://travis-ci.com/Sxtanna/KORM) [![GitHub](https://img.shields.io/github/license/Sxtanna/KORM.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
+<!-- PROJECT LOGO -->
+<br />
+<p align="center">
+  <a href="https://github.com/Sxtanna/KORM/">
+    <img src="./Korm Logo.jpg" alt="Logo" width="90" height="90">
+  </a>
+
+  <h3 align="center">Korm</h3>
+
+  <p align="center">
+    Kotlin Object Relational Mapping
+    <br />
+    <a href="https://github.com/Sxtanna/KORM/wiki"><strong>Unimplemented Wiki :) »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/Sxtanna/KORM/">View Demo</a>
+    ·
+    <a href="https://github.com/Sxtanna/KORM/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/Sxtanna/KORM/issues">Request Feature</a>
+    ·
+    <a href="https://github.com/Sxtanna/KORM/pulls">Send a Pull Request</a>
+  </p>
+</p>
 
 
 #### This is basically a stripped down Json with slightly different syntax. This readme is going to follow the same format as [TOML's](https://github.com/toml-lang/toml)
@@ -58,6 +82,28 @@ compile "com.sxtanna.korm:Korm:+"
     <artifactId>Korm</artifactId>
     <version>LATEST</version>
 </dependency>
+```
+
+Basic Usage
+--------
+```kotlin
+data class User(val name: String, val pass: String)
+
+val korm = Korm()
+val user = User(name = "Sxtanna", pass = "BadPassword")
+
+// converting from object to korm
+val push = korm.push(user)
+println(push) // user: "Sxtanna"
+              // pass: "BadPassword"
+
+
+// converting from korm to object
+val pull = korm.pull(push).to<User>()
+println(pull) // User(name=Sxtanna, pass=BadPassword)
+
+val same: Boolean = user == pull
+println(same) // true
 ```
 
 Symbols
@@ -148,43 +194,3 @@ ages: {  // Map<Age, Int>
   `{ age: 23 }`: 23
 }
 ```
-
-RefTypes
---------
-A [RefType](https://github.com/Sxtanna/KORM/blob/master/src/main/kotlin/com/sxtanna/korm/data/RefType.kt) is a class that takes advantage of Java's superclass generic preservation. 
-
-It should be used anywhere that a generic would be otherwise erased.
-
-
-Reader
---------
-Korm's reader currently has no extra options or functionality. It's job is to read from your input, lex it's contents, and type the results to `KormType` instances
-
-If the only thing you need is to be able to read Korm documents, you can simply create an instance of [KormReader](https://github.com/Sxtanna/KORM/blob/master/src/main/kotlin/com/sxtanna/korm/reader/KormReader.kt)
-
-The `KormReader` provides a couple of read functions that take in different sources
-
-Function | Description | Usage
------------- | ------------- | -------------
-`fun read(reader: Reader): ReaderContext` | Creates a context from the text read from the provided `Reader` | `KormReader#read(Reader)`
-`fun read(text: String): ReaderContext` | Creates a context from the provided text | `KormReader#read("basicKey: 21")`
-`fun read(file: File): ReaderContext` | Creates a context from the text content read from a file | `KormReader#read(File("file.korm"))`
-`fun read(stream: InputStream, charset: Charset = Charset.defaultCharset()): ReaderContext` | Creates a context from the text read from the provided `InputStream` | `KormReader#read(InputStream)`
-
-
-All read implementations of KormReader return an instance of `KormReader.ReaderContext`, which provides several methods of data manipulation.
-
-Function | Description | Usage
------------- | ------------- | -------------
-`<T : Any> to(clazz: KClass<T>): T?` | Attempts to map to an instance of `T` | `ReaderContext#to(Int::class)`
-`inline fun <reified T : Any> to(): T?` | Reified implementation of ^ | `ReaderContext#to<Int>()`
-`fun <T : Any> toRef(type: RefType<T>): T?` | Attempts to map to an instance of `T` from the given `RefType<T>` | `ReaderContext#toRef(RefType.of<Int>())`
-`inline fun <reified T : Any> toRef(): T?` | Reified implementation of ^ | `ReaderContext#toRef<Int>()`
-`fun <T : Any> toList(clazz: KClass<T>): List<T>` | Attempts to create a list of type `T` | `ReaderContext#toList(String::class)`
-`inline fun <reified T : Any> toList(): List<T>` | Reified implementation of ^ | `ReaderContext#toList<String>()`
-`fun <T : Any> toListRef(ref: RefType<T>): List<T>`| Attempts to create a list of type `T` from the given `RefType<T>` | `ReaderContext#toListRef(RefType.of<List<String>>())` // would return `List<List<String>>`
-`inline fun <reified T : Any> toListRef(): List<T>`| Reified implementation of ^ | `ReaderContext#toListRef<List<String>>()` // would return `List<List<String>>`
-`fun <K : Any, V : Any> toHash(kType: KClass<K>, vType: KClass<V>): Map<K, V>` | Attempts to create a map of types `<K, V>` | `ReaderContext#toHash(Int::class, String::class)`
-`inline fun <reified K : Any, reified V : Any> toHash(): Map<K, V>` | Reified implementation of ^ | `ReaderContext#toHash<Int, String>()`
-`fun <K : Any, V : Any> toHashRef(kRef: RefType<K>, vRef: RefType<V>): Map<K, V>` | Attempts to create a map of types `<K, V>` from the given `RefType<K>` and `RefType<V>` | `ReaderContext#toHashRef(RefType.of<List<Int>>(), RefType.of<List<String>>())`  // would return `Map<List<Int>, List<String>>`
-`inline fun <reified K : Any, reified V : Any> toHashRef(): Map<K, V>` | Reified implementation of ^ | `ReaderContext#toHashRef<List<Int>, List<String>>()` // would return `Map<List<Int>, List<String>>`
