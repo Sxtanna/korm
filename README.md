@@ -4,7 +4,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/Sxtanna/KORM/">
-    <img src="./Korm Logo.jpg" alt="Logo" width="90" height="90">
+    <img src="logo.png" alt="Logo" width="100" height="100">
   </a>
 
   <h3 align="center">Korm</h3>
