@@ -13,6 +13,7 @@ import com.sxtanna.korm.data.RefType
 import com.sxtanna.korm.data.custom.KormCustomCodec
 import com.sxtanna.korm.data.custom.KormCustomPull
 import com.sxtanna.korm.data.custom.KormList
+import com.sxtanna.korm.data.custom.KormNull
 import com.sxtanna.korm.util.Reflect
 import java.io.File
 import java.io.FileReader
@@ -132,35 +133,19 @@ class KormReader
 		}
 		
 		
-		// directly to a class
+		//region || ==== Base ==== ||
 		fun <T : Any> to(clazz: KClass<T>): T?
 		{
-			if (types.isEmpty())
-			{
-				return null
-			}
-			
 			return internalTo(clazz, clazz.java)
 		}
 		
-		inline fun <reified T : Any> to(): T?
+		inline fun <reified T : Any?> to(): T?
 		{
-			return to(T::class)
-		}
-		
-		@Deprecated("this is gonna be removed", ReplaceWith("to(clazz as Type)", "java.lang.reflect.Type"), DeprecationLevel.ERROR)
-		fun <T : Any> to(clazz: Class<T>): T?
-		{
-			return to(clazz as Type) // who doesn't love enhanced Java Interop?
+			return internalTo(T::class, T::class.java)
 		}
 		
 		fun <T : Any> to(type: Type): T?
 		{
-			if (types.isEmpty())
-			{
-				return null
-			}
-			
 			val clazz = if (type !is ParameterizedType)
 			{
 				type
@@ -174,104 +159,156 @@ class KormReader
 		}
 		
 		
-		private fun <T : Any> internalTo(clazz: KClass<*>, type: Type): T?
+		fun <T : Any> toRef(type: RefType<T>): T?
 		{
-			try
+			val type = type.type()
+			
+			val clazz = if (type !is ParameterizedType)
 			{
-				if (!Reflect.isKormType(clazz))
-				{
-					return mapInstance(clazz) as? T
-				}
-				
-				val korm = if (types.size == 1)
-				{
-					types.single()
-				}
-				else
-				{
-					HashType(Data.none(), types)
-				}
-				
-				return Reflect.ensureIs(mapKormToType(korm, type) ?: return null, clazz) as? T
+				type
 			}
-			catch (ex: Exception)
+			else
+			{
+				type.rawType
+			}
+			
+			return internalTo(Reflect.nonPrimitive((clazz as Class<*>).kotlin), type)
+		}
+		
+		inline fun <reified T : Any?> toRef(): T?
+		{
+			val type = RefType.of<T>().type()
+			
+			val clazz = if (type !is ParameterizedType)
+			{
+				type
+			}
+			else
+			{
+				type.rawType
+			}
+			
+			return internalTo(Reflect.nonPrimitive((clazz as Class<*>).kotlin), type)
+		}
+		
+		@JvmSynthetic
+		@PublishedApi
+		internal fun <T> internalTo(clazz: KClass<*>, type: Type): T?
+		{
+			if (types.isEmpty())
 			{
 				return null
 			}
-		}
-		
-		
-		fun <T : Any> toRef(type: RefType<T>): T?
-		{
-			return to(type.type())
-		}
-		
-		inline fun <reified T : Any> toRef(): T?
-		{
-			return toRef(RefType.of<T>())
-		}
-		
-		
-		// to a list
-		fun <T : Any> toList(clazz: KClass<T>): List<T>
-		{
-			val type = checkNotNull(types.singleOrNull() as? ListType) {
-				"This does not represent a list"
+			
+			if (!Reflect.isKormType(clazz))
+			{
+				return mapInstance(clazz) as? T
 			}
 			
-			return mapListData(type, List::class, clazz.java) as List<T>
+			val korm = if (types.size == 1)
+			{
+				types.single()
+			}
+			else
+			{
+				HashType(Data.none(), types)
+			}
+			
+			return Reflect.ensureIs(mapKormToType(korm, type) ?: return null, clazz) as? T
+		}
+		//endregion
+		
+		
+		//region || ==== List ==== ||
+		fun <T : Any> toList(clazz: KClass<T>): List<T>
+		{
+			return internalToList(clazz.java, false)
 		}
 		
-		inline fun <reified T : Any> toList(): List<T>
+		inline fun <reified T : Any?> toList(): List<T>
 		{
-			return toList(T::class)
+			return internalToList(T::class.java, null is T)
 		}
 		
 		
 		fun <T : Any> toListRef(ref: RefType<T>): List<T>
 		{
+			return internalToList(ref.type(), false)
+		}
+		
+		inline fun <reified T : Any?> toListRef(): List<T>
+		{
+			return internalToList(RefType.of<T>().type(), null is T)
+		}
+		
+		
+		@JvmSynthetic
+		@PublishedApi
+		internal fun <T> internalToList(eType: Type, nullable: Boolean): List<T>
+		{
 			val type = checkNotNull(types.singleOrNull() as? ListType) {
 				"This does not represent a list"
 			}
 			
-			return mapListData(type, List::class, ref.type()) as List<T>
+			val data = mapListData(type, List::class, eType) ?: return emptyList()
+			
+			return if (nullable)
+			{
+				data as List<T>
+			}
+			else
+			{
+				data.filterNotNull() as List<T>
+			}
 		}
-		
-		inline fun <reified T : Any> toListRef(): List<T>
-		{
-			return toListRef(RefType.of())
-		}
+		//endregion
 		
 		
-		// to a hash
+		//region || ==== Hash ==== ||
 		fun <K : Any, V : Any> toHash(kType: KClass<K>, vType: KClass<V>): Map<K, V>
 		{
-			val type = checkNotNull(types.singleOrNull() as? HashType) {
-				"This does not represent a hash"
-			}
-			
-			return mapHashData(type, Map::class, kType.java, vType.java) as Map<K, V>
+			return internalToHash(kType.java, false, vType.java, false)
 		}
 		
-		inline fun <reified K : Any, reified V : Any> toHash(): Map<K, V>
+		inline fun <reified K : Any?, reified V : Any?> toHash(): Map<K, V>
 		{
-			return toHash(K::class, V::class)
+			return internalToHash(K::class.java, null is K, V::class.java, null is V)
 		}
 		
 		
 		fun <K : Any, V : Any> toHashRef(kRef: RefType<K>, vRef: RefType<V>): Map<K, V>
 		{
+			return internalToHash(kRef.type(), false, vRef.type(), false)
+		}
+		
+		inline fun <reified K : Any?, reified V : Any?> toHashRef(): Map<K, V>
+		{
+			return internalToHash(RefType.of<K>().type(), null is K, RefType.of<V>().type(), null is V)
+		}
+		
+		
+		@JvmSynthetic
+		@PublishedApi
+		internal fun <K, V> internalToHash(kType: Type, kNullable: Boolean, vType: Type, vNullable: Boolean): Map<K, V>
+		{
 			val type = checkNotNull(types.singleOrNull() as? HashType) {
 				"This does not represent a hash"
 			}
 			
-			return mapHashData(type, Map::class, kRef.type(), vRef.type()) as Map<K, V>
+			var data = mapHashData(type, Map::class, kType, vType) ?: return emptyMap()
+			
+			if (!kNullable)
+			{
+				data = data.filterKeys { it != null }
+			}
+			if (!vNullable)
+			{
+				data = data.filterValues { it != null }
+			}
+			
+			return data as Map<K, V>
 		}
-		
-		inline fun <reified K : Any, reified V : Any> toHashRef(): Map<K, V>
-		{
-			return toHashRef(RefType.of(), RefType.of())
-		}
+		//endregion
 		
 		
 		fun <T : Any> mapInstance(clazz: KClass<out T>, types: MutableList<KormType> = this.types, caller: KormPuller<*>? = null): T?
@@ -363,7 +400,7 @@ class KormReader
 					
 					mapDataToType(korm.data, type)
 				}
-				is ListType          ->
+				is ListType ->
 				{
 					when (type)
 					{
@@ -483,7 +520,7 @@ class KormReader
 			return mapData(korm.data, clazz)
 		}
 		
-		fun mapListData(korm: ListType, clazz: KClass<*>, type: Type): Collection<Any>?
+		fun mapListData(korm: ListType, clazz: KClass<*>, type: Type): Collection<Any?>?
 		{
 			val data = korm.data.map {
 				mapDataToType(it, type, (it as? KormType)?.key?.type == COMPLEX)
@@ -492,7 +529,7 @@ class KormReader
 			return mapList(data, clazz, type)
 		}
 		
-		fun mapHashData(korm: HashType, clazz: KClass<*>, kType: Type, vType: Type): Map<Any, Any>?
+		fun mapHashData(korm: HashType, clazz: KClass<*>, kType: Type, vType: Type): Map<Any?, Any?>?
 		{
 			val data = korm.data.associate {
 				mapDataToType(it.key.data, kType, it.key.type == COMPLEX) to mapKormToType(it, vType)
@@ -505,6 +542,11 @@ class KormReader
 		fun mapDataToType(data: Any?, type: Type, complex: Boolean = false): Any?
 		{
 			val data = data ?: return null
+			
+			if (data === KormNull)
+			{
+				return null
+			}
 			
 			if (data is KormType)
 			{
@@ -668,29 +710,29 @@ class KormReader
 			return mapData(data, T::class)
 		}
 		
-		fun mapList(data: Any?, clazz: KClass<*>, type: Type): Collection<Any>?
+		fun mapList(data: Any?, clazz: KClass<*>, type: Type): Collection<Any?>?
 		{
 			val data = data ?: return null
 			val find = Reflect.findListType(clazz) ?: return null
 			
-			return Reflect.makeSequence(data).mapNotNullTo(find)
+			return Reflect.makeSequence(data).mapTo(find)
 			{
 				mapDataToType(it, type)
 			}
 		}
 		
-		fun mapHash(data: Any?, clazz: KClass<*>, kType: Type, vType: Type): Map<Any, Any>?
+		fun mapHash(data: Any?, clazz: KClass<*>, kType: Type, vType: Type): Map<Any?, Any?>?
 		{
 			data ?: return null
 			
 			val hash = Reflect.findHashType(clazz) ?: return null
 			
 			(data as Map<*, *>).forEach { (k, v) ->
-				val kData = k ?: return@forEach
-				val vData = v ?: return@forEach
+				val kData = k
+				val vData = v
 				
-				val kOutP = mapDataToType(kData, kType) ?: return@forEach
-				val vOutP = mapDataToType(vData, vType) ?: return@forEach
+				val kOutP = mapDataToType(kData, kType)
+				val vOutP = mapDataToType(vData, vType)
 				
 				hash[kOutP] = vOutP
 			}

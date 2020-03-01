@@ -5,6 +5,7 @@ import com.sxtanna.korm.comp.Token
 import com.sxtanna.korm.comp.Type.*
 import com.sxtanna.korm.data.Data
 import com.sxtanna.korm.data.KormType
+import com.sxtanna.korm.data.custom.KormNull
 
 internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 {
@@ -157,6 +158,9 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 				{
 					list += KormType.ListType(Data.none(), parseList())
 				}
+				COMPLEX -> {
+					list += KormType.BaseType(Data.none(), KormNull)
+				}
 				else       ->
 				{
 					throw IllegalStateException("Out of place token: $next")
@@ -212,6 +216,9 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 			BRACK_L    ->
 			{
 				parseKeyedList(symbol)
+			}
+			COMPLEX -> {
+				KormType.BaseType(symbol.data, KormNull) // this should probably be something else... but it works, so who cares
 			}
 			else       ->
 			{

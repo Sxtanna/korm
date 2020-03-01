@@ -24,6 +24,7 @@ import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
 
 @Suppress("UNCHECKED_CAST")
+@PublishedApi
 internal object Reflect
 {
 	
@@ -236,7 +237,7 @@ internal object Reflect
 	}
 	
 	
-	fun findListType(clazz: KClass<*>): MutableCollection<Any>?
+	fun findListType(clazz: KClass<*>): MutableCollection<Any?>?
 	{
 		return when
 		{
@@ -254,7 +255,7 @@ internal object Reflect
 			}
 			isSubType(clazz, Collection::class) ->
 			{
-				newInstance(clazz) as? MutableCollection<Any>
+				newInstance(clazz) as? MutableCollection<Any?>
 			}
 			else                                ->
 			{
@@ -263,7 +264,7 @@ internal object Reflect
 		}
 	}
 	
-	fun findHashType(clazz: KClass<*>): MutableMap<Any, Any>?
+	fun findHashType(clazz: KClass<*>): MutableMap<Any?, Any?>?
 	{
 		return when
 		{
@@ -273,7 +274,7 @@ internal object Reflect
 			}
 			isSubType(clazz, Map::class)                                             ->
 			{
-				newInstance(clazz) as? MutableMap<Any, Any>
+				newInstance(clazz) as? MutableMap<Any?, Any?>
 			}
 			else                                                                     ->
 			{
