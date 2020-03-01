@@ -6,7 +6,7 @@ import java.lang.reflect.Type
 /**
  * A cute little JVM Type Erasure workaround
  */
-abstract class RefType<T : Any>
+abstract class RefType<T>
 {
 	
 	/**
@@ -24,7 +24,7 @@ abstract class RefType<T : Any>
 		/**
 		 * Create a new RefType using an anonymous class
 		 */
-		inline fun <reified T : Any> of() = object : RefType<T>()
+		inline fun <reified T : Any?> of() = object : RefType<T>()
 		{}
 		
 	}
