@@ -2,7 +2,6 @@ package com.sxtanna.korm.legacy.io
 
 import com.google.gson.Gson
 import com.sxtanna.korm.Korm
-import com.sxtanna.korm.base.*
 import com.sxtanna.korm.legacy.base.AsListType
 import com.sxtanna.korm.legacy.base.CustomCodecTest
 import com.sxtanna.korm.legacy.base.GameMessage
@@ -19,7 +18,7 @@ import com.sxtanna.korm.legacy.base.custom.CustomBoxed
 import com.sxtanna.korm.legacy.base.custom.CustomClass
 import com.sxtanna.korm.legacy.base.stupid.StupidThing
 import com.sxtanna.korm.writer.KormWriter
-import com.sxtanna.korm.writer.base.Options
+import com.sxtanna.korm.data.option.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID

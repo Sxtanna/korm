@@ -1,14 +1,14 @@
 package com.sxtanna.korm
 
 import com.sxtanna.korm.data.custom.KormList
+import com.sxtanna.korm.data.option.Options
 import com.sxtanna.korm.writer.KormWriter
-import com.sxtanna.korm.writer.base.Options
 import org.junit.jupiter.api.Test
 
-class Examples
+internal class Examples
 {
 	
-	val korm = Korm(writer = KormWriter(2, Options.none()))
+	private val korm = Korm(writer = KormWriter(2, Options.none()))
 	
 	
 	@KormList(["name"])
@@ -20,7 +20,6 @@ class Examples
 	@Test
 	fun personExample()
 	{
-		
 		val sxtannaObject = Person(Naming("Sxtanna"))
 		println(sxtannaObject)
 		

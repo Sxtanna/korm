@@ -17,7 +17,7 @@ import com.sxtanna.korm.legacy.base.Vec
 import com.sxtanna.korm.legacy.base.Word
 import com.sxtanna.korm.legacy.base.stupid.StupidThing
 import com.sxtanna.korm.writer.KormWriter
-import com.sxtanna.korm.writer.base.Options
+import com.sxtanna.korm.data.option.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.io.File
@@ -82,16 +82,16 @@ class WriterTests
 	{
 		
 		val level0 = Level(name = "Lobby", owner = "Sxtanna",
-		                                                                   min = Vec(-50.0, -50.0, -50.0),
-		                                                                   max = Vec(50.0, 50.0, 50.0),
-		                                                                   spawns = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))),
-		                                                                   custom = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))))
+		                   min = Vec(-50.0, -50.0, -50.0),
+		                   max = Vec(50.0, 50.0, 50.0),
+		                   spawns = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))),
+		                   custom = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))))
 		
 		val level1 = Level(name = "Arcade", owner = "Sxtanna",
-		                                                                   min = Vec(-50.0, -50.0, -50.0),
-		                                                                   max = Vec(50.0, 50.0, 50.0),
-		                                                                   spawns = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))),
-		                                                                   custom = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))))
+		                   min = Vec(-50.0, -50.0, -50.0),
+		                   max = Vec(50.0, 50.0, 50.0),
+		                   spawns = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))),
+		                   custom = mapOf(1 to listOf(Vec(1.0, 1.0, 1.0), Vec(2.0, 1.0, 2.0))))
 		
 		
 		println(korm.push(level0))
