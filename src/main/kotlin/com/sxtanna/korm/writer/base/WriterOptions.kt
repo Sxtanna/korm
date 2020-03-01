@@ -1,5 +1,7 @@
 package com.sxtanna.korm.writer.base
 
+import com.sxtanna.korm.data.option.Options
+
 class WriterOptions internal constructor(private val options: Set<Options>)
 {
 	
@@ -45,7 +47,16 @@ class WriterOptions internal constructor(private val options: Set<Options>)
 	val complexListEntryOnNewLine: Boolean
 		get() = Options.COMPLEX_LIST_ENTRY_ON_NEW_LINE in options
 	
+	/**
+	 * @see [Options.INCLUDE_COMMENTS]
+	 */
 	val includeComments: Boolean
 		get() = Options.INCLUDE_COMMENTS in options
+	
+	/**
+	 * @see [Options.SERIALIZE_NULLS]
+	 */
+	val serializeNulls: Boolean
+		get() = Options.SERIALIZE_NULLS in options
 	
 }

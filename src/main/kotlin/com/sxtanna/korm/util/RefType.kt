@@ -1,4 +1,4 @@
-package com.sxtanna.korm.data
+package com.sxtanna.korm.util
 
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type

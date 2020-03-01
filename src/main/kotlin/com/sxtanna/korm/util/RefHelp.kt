@@ -1,6 +1,6 @@
 package com.sxtanna.korm.util
 
-import com.sxtanna.korm.data.custom.KormNull
+import com.sxtanna.korm.data.KormNull
 import sun.misc.Unsafe
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -25,7 +25,7 @@ import kotlin.reflect.jvm.javaType
 
 @Suppress("UNCHECKED_CAST")
 @PublishedApi
-internal object Reflect
+internal object RefHelp
 {
 	
 	private val unsafe: Unsafe? = try

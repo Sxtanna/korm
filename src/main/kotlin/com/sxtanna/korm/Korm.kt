@@ -4,10 +4,16 @@ import com.sxtanna.korm.base.KormCodec
 import com.sxtanna.korm.base.KormPuller
 import com.sxtanna.korm.base.KormPusher
 import com.sxtanna.korm.data.KormType
-import com.sxtanna.korm.data.RefType
 import com.sxtanna.korm.reader.KormReader
+import com.sxtanna.korm.util.RefType
 import com.sxtanna.korm.writer.KormWriter
-import java.io.*
+import java.io.File
+import java.io.FileWriter
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.OutputStreamWriter
+import java.io.Reader
+import java.io.Writer
 import java.nio.charset.Charset
 import kotlin.reflect.KClass
 

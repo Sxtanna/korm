@@ -3,13 +3,13 @@ package com.sxtanna.korm.writer
 import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.Exec
 import com.sxtanna.korm.base.KormPusher
+import com.sxtanna.korm.data.KormNull
 import com.sxtanna.korm.data.custom.KormComment
 import com.sxtanna.korm.data.custom.KormCustomCodec
 import com.sxtanna.korm.data.custom.KormCustomPush
 import com.sxtanna.korm.data.custom.KormList
-import com.sxtanna.korm.data.custom.KormNull
-import com.sxtanna.korm.util.Reflect
-import com.sxtanna.korm.writer.base.Options
+import com.sxtanna.korm.data.option.Options
+import com.sxtanna.korm.util.RefHelp
 import com.sxtanna.korm.writer.base.WriterOptions
 import java.io.File
 import java.io.FileWriter
@@ -28,8 +28,11 @@ import kotlin.reflect.full.createInstance
 @Suppress("MemberVisibilityCanBePrivate", "UNCHECKED_CAST")
 class KormWriter(private val indent: Int, private val options: WriterOptions)
 {
+	constructor(indent: Int = 2)
+			: this(indent, Options.min())
+	constructor(indent: Int = 2, vararg options: Options)
+			: this(indent, WriterOptions(options.toSet()))
 	
-	constructor() : this(2, Options.min())
 	
 	@Transient
 	internal lateinit var korm: Korm
@@ -352,14 +355,14 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		
 		override fun exec()
 		{
-			if (Reflect.isKormType(data::class))
+			if (RefHelp.isKormType(data::class))
 			{
 				writeData(data)
 			}
 			else
 			{
 				indentLess() // hot fix
-				writeFields(data, Reflect.findAnnotation<KormList>(data::class)?.props?.toList())
+				writeFields(data, RefHelp.findAnnotation<KormList>(data::class)?.props?.toList())
 			}
 			
 			writer.flush()
@@ -450,7 +453,13 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			{
 				list.forEachIndexed { i, it ->
 					val data = it ?: KormNull
-					val type = Reflect.isKormType(data::class)
+					
+					if (data === KormNull && !options.serializeNulls)
+					{
+						return@forEachIndexed
+					}
+					
+					val type = RefHelp.isKormType(data::class)
 					
 					if (i == 0)
 					{
@@ -571,8 +580,13 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			
 			entries.forEach {
 				
-				val name = it.key
-				val data = it.value
+				val name = it.key ?: KormNull
+				val data = it.value ?: KormNull
+				
+				if ((name === KormNull || data === KormNull) && !options.serializeNulls)
+				{
+					return@forEach
+				}
 				
 				if (writingName)
 				{
@@ -597,8 +611,8 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					}
 				}
 				
-				writeName(name ?: KormNull)
-				writeData(data ?: KormNull, true)
+				writeName(name)
+				writeData(data, true)
 				
 				if (cur++ < max)
 				{
@@ -693,7 +707,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					writer.write("null")
 					writeComplexTick()
 				}
-				is Char                           ->
+				is Char                                              ->
 				{
 					writeSingleQuote()
 					writer.write(inst.toString())
@@ -781,22 +795,22 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			{
 				when
 				{
-					Reflect.isBaseType(clazz) ->
+					RefHelp.isBaseType(clazz) ->
 					{
 						writeBase(inst)
 					}
-					Reflect.isHashType(clazz) ->
+					RefHelp.isHashType(clazz) ->
 					{
-						writeHash(Reflect.toHashable(inst) ?: return)
+						writeHash(RefHelp.toHashable(inst) ?: return)
 					}
-					Reflect.isListType(clazz) ->
+					RefHelp.isListType(clazz) ->
 					{
-						writeList(Reflect.toListable(inst) ?: return)
+						writeList(RefHelp.toListable(inst) ?: return)
 					}
 					else                      ->
 					{ // write class fields as a hash
 						
-						val asList = Reflect.findAnnotation<KormList>(inst::class)
+						val asList = RefHelp.findAnnotation<KormList>(inst::class)
 						
 						if (asList != null)
 						{
@@ -906,7 +920,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			
 			if (options.includeComments)
 			{
-				val comment = Reflect.findAnnotation<KormComment>(clazz)
+				val comment = RefHelp.findAnnotation<KormComment>(clazz)
 				
 				if (comment != null && comment.comment.isNotEmpty())
 				{
@@ -926,7 +940,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 				}
 			}
 			
-			val fields = Reflect.access(inst::class).filter { it.isInnerRef.not() }
+			val fields = RefHelp.access(inst::class).filter { it.isInnerRef.not() }
 			
 			if (props != null)
 			{
@@ -944,6 +958,11 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					
 					val name = field.name
 					val data = field[inst] ?: KormNull
+					
+					if (data === KormNull && !options.serializeNulls)
+					{
+						continue
+					}
 					
 					if (options.includeComments)
 					{
@@ -1038,19 +1057,19 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 				return stored
 			}
 			
-			val pusher = Reflect.findAnnotation<KormCustomPush>(clazz)
+			val pusher = RefHelp.findAnnotation<KormCustomPush>(clazz)
 			if (pusher != null)
 			{
 				return extractFrom(pusher.pusher)
 			}
 			
-			val codec = Reflect.findAnnotation<KormCustomCodec>(clazz)
+			val codec = RefHelp.findAnnotation<KormCustomCodec>(clazz)
 			if (codec != null)
 			{
 				return extractFrom(codec.codec)
 			}
 			
-			Reflect.nextSuperClasses(clazz).forEach {
+			RefHelp.nextSuperClasses(clazz).forEach {
 				
 				val pusher = getCustomPush(it)
 				

@@ -1,4 +1,6 @@
-package com.sxtanna.korm.writer.base
+package com.sxtanna.korm.data.option
+
+import com.sxtanna.korm.writer.base.WriterOptions
 
 enum class Options
 {
@@ -52,14 +54,18 @@ enum class Options
 	/**
 	 * Will write the comments found from [KormComment] annotations
 	 */
-	INCLUDE_COMMENTS;
+	INCLUDE_COMMENTS,
+	/**
+	 * Will include null values in the serialized output
+	 */
+	SERIALIZE_NULLS;
 	
 	
 	companion object
 	{
 		
 		@JvmStatic
-		fun of(vararg options: Options) = WriterOptions(setOf(*options))
+		fun of(vararg options: Options) = WriterOptions(options.toSet())
 		
 		
 		@JvmStatic

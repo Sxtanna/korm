@@ -5,7 +5,7 @@ import com.sxtanna.korm.comp.Token
 import com.sxtanna.korm.comp.Type.*
 import com.sxtanna.korm.data.Data
 import com.sxtanna.korm.data.KormType
-import com.sxtanna.korm.data.custom.KormNull
+import com.sxtanna.korm.data.KormNull
 
 internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 {

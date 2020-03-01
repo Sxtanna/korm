@@ -9,12 +9,12 @@ import com.sxtanna.korm.comp.typer.Typer
 import com.sxtanna.korm.data.Data
 import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.KormType.*
-import com.sxtanna.korm.data.RefType
+import com.sxtanna.korm.util.RefType
 import com.sxtanna.korm.data.custom.KormCustomCodec
 import com.sxtanna.korm.data.custom.KormCustomPull
 import com.sxtanna.korm.data.custom.KormList
-import com.sxtanna.korm.data.custom.KormNull
-import com.sxtanna.korm.util.Reflect
+import com.sxtanna.korm.data.KormNull
+import com.sxtanna.korm.util.RefHelp
 import java.io.File
 import java.io.FileReader
 import java.io.InputStream
@@ -155,7 +155,7 @@ class KormReader
 				type.rawType
 			}
 			
-			return internalTo(Reflect.nonPrimitive((clazz as Class<*>).kotlin), type)
+			return internalTo(RefHelp.nonPrimitive((clazz as Class<*>).kotlin), type)
 		}
 		
 		
@@ -172,7 +172,7 @@ class KormReader
 				type.rawType
 			}
 			
-			return internalTo(Reflect.nonPrimitive((clazz as Class<*>).kotlin), type)
+			return internalTo(RefHelp.nonPrimitive((clazz as Class<*>).kotlin), type)
 		}
 		
 		inline fun <reified T : Any?> toRef(): T?
@@ -188,7 +188,7 @@ class KormReader
 				type.rawType
 			}
 			
-			return internalTo(Reflect.nonPrimitive((clazz as Class<*>).kotlin), type)
+			return internalTo(RefHelp.nonPrimitive((clazz as Class<*>).kotlin), type)
 		}
 		
 		@JvmSynthetic
@@ -200,7 +200,7 @@ class KormReader
 				return null
 			}
 			
-			if (!Reflect.isKormType(clazz))
+			if (!RefHelp.isKormType(clazz))
 			{
 				return mapInstance(clazz) as? T
 			}
@@ -214,7 +214,7 @@ class KormReader
 				HashType(Data.none(), types)
 			}
 			
-			return Reflect.ensureIs(mapKormToType(korm, type) ?: return null, clazz) as? T
+			return RefHelp.ensureIs(mapKormToType(korm, type) ?: return null, clazz) as? T
 		}
 		//endregion
 		
@@ -326,20 +326,20 @@ class KormReader
 			}
 			else
 			{
-				val instance = Reflect.newInstance(clazz) ?: return null
+				val instance = RefHelp.newInstance(clazz) ?: return null
 				cache[clazz.java] = instance
 				
-				val asList = Reflect.findAnnotation<KormList>(clazz)?.props?.toList()
+				val asList = RefHelp.findAnnotation<KormList>(clazz)?.props?.toList()
 				
 				if (asList == null)
 				{
-					val fields = Reflect.access(clazz)
+					val fields = RefHelp.access(clazz)
 					
 					for (field in fields)
 					{
 						if (field.isInnerRef)
 						{
-							Reflect.assign(field, instance, cache[field.genericType] ?: continue)
+							RefHelp.assign(field, instance, cache[field.genericType] ?: continue)
 							continue
 						}
 						
@@ -360,14 +360,14 @@ class KormReader
 						}
 						
 						val data = mapKormToType(korm, field.genericType) ?: continue
-						Reflect.assign(field, instance, data)
+						RefHelp.assign(field, instance, data)
 					}
 				}
 				else
 				{
 					val data = (types.single() as ListType).data
 					
-					val fields = Reflect.access(clazz).sortedBy { asList.indexOf(it.name) }
+					val fields = RefHelp.access(clazz).sortedBy { asList.indexOf(it.name) }
 					
 					for ((index, field) in fields.withIndex())
 					{
@@ -414,7 +414,7 @@ class KormReader
 							
 							if (type.isArray.not())
 							{
-								if (Reflect.findAnnotation<KormList>(type.kotlin) != null)
+								if (RefHelp.findAnnotation<KormList>(type.kotlin) != null)
 								{
 									return mapInstance<Any>(type.kotlin, mutableListOf(korm))
 								}
@@ -621,17 +621,17 @@ class KormReader
 					
 					when
 					{
-						Reflect.isSubType(typeType, Collection::class) ->
+						RefHelp.isSubType(typeType, Collection::class) ->
 						{
-							check(Reflect.isListType(data::class)) {
+							check(RefHelp.isListType(data::class)) {
 								"Cannot map $data to list"
 							}
 							
 							return mapList(data, typeType, typeArgs[0])
 						}
-						Reflect.isSubType(typeType, Map::class)        ->
+						RefHelp.isSubType(typeType, Map::class)        ->
 						{
-							check(Reflect.isHashType(data::class)) {
+							check(RefHelp.isHashType(data::class)) {
 								"Cannot map $data to hash"
 							}
 							
@@ -650,7 +650,7 @@ class KormReader
 		{
 			data ?: return null
 			
-			val clazz = Reflect.nonPrimitive(clazz)
+			val clazz = RefHelp.nonPrimitive(clazz)
 			
 			if (data is KormType)
 			{
@@ -667,15 +667,15 @@ class KormReader
 				{
 					return clazz.cast(data as? String ?: data.toString())
 				}
-				clazz == Reflect.nonPrimitive(Char::class)    ->
+				clazz == RefHelp.nonPrimitive(Char::class)    ->
 				{
 					return clazz.cast(data as? Char ?: (data as? String)?.first() ?: data.toString().first())
 				}
-				clazz == Reflect.nonPrimitive(Boolean::class) ->
+				clazz == RefHelp.nonPrimitive(Boolean::class) ->
 				{
 					return clazz.cast(data as? Boolean)
 				}
-				Reflect.isSubType(clazz, Number::class)       ->
+				RefHelp.isSubType(clazz, Number::class)       ->
 				{
 					var number = data as? Number ?: return null
 					
@@ -695,7 +695,7 @@ class KormReader
 					
 					return clazz.cast(number)
 				}
-				Reflect.isSubType(clazz, Enum::class)         ->
+				RefHelp.isSubType(clazz, Enum::class)         ->
 				{
 					return clazz.java.enumConstants.find { (it as Enum<*>).name.equals(data.toString(), true) }
 				}
@@ -713,9 +713,9 @@ class KormReader
 		fun mapList(data: Any?, clazz: KClass<*>, type: Type): Collection<Any?>?
 		{
 			val data = data ?: return null
-			val find = Reflect.findListType(clazz) ?: return null
+			val find = RefHelp.findListType(clazz) ?: return null
 			
-			return Reflect.makeSequence(data).mapTo(find)
+			return RefHelp.makeSequence(data).mapTo(find)
 			{
 				mapDataToType(it, type)
 			}
@@ -725,7 +725,7 @@ class KormReader
 		{
 			data ?: return null
 			
-			val hash = Reflect.findHashType(clazz) ?: return null
+			val hash = RefHelp.findHashType(clazz) ?: return null
 			
 			(data as Map<*, *>).forEach { (k, v) ->
 				val kData = k
@@ -756,19 +756,19 @@ class KormReader
 				return stored
 			}
 			
-			val puller = Reflect.findAnnotation<KormCustomPull>(clazz)
+			val puller = RefHelp.findAnnotation<KormCustomPull>(clazz)
 			if (puller != null)
 			{
 				return extractFrom(puller.puller)
 			}
 			
-			val codec = Reflect.findAnnotation<KormCustomCodec>(clazz)
+			val codec = RefHelp.findAnnotation<KormCustomCodec>(clazz)
 			if (codec != null)
 			{
 				return extractFrom(codec.codec)
 			}
 			
-			Reflect.nextSuperClasses(clazz).forEach {
+			RefHelp.nextSuperClasses(clazz).forEach {
 				
 				val puller = getCustomPull(it)
 				
