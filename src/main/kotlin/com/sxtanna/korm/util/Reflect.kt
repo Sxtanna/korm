@@ -1,5 +1,6 @@
 package com.sxtanna.korm.util
 
+import com.sxtanna.korm.data.custom.KormNull
 import sun.misc.Unsafe
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -40,7 +41,7 @@ internal object Reflect
 	}
 	
 	
-	private val BASE_TYPES = setOf(Number::class, Boolean::class, Char::class, String::class, UUID::class, Enum::class, Throwable::class)
+	private val BASE_TYPES = setOf(Number::class, Boolean::class, Char::class, String::class, UUID::class, Enum::class, Throwable::class, KormNull::class)
 	
 	private val LIST_TYPES = setOf(Collection::class)
 	
