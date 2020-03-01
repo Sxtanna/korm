@@ -1,5 +1,5 @@
 plugins {
-	id 'org.jetbrains.dokka' version '0.10.0'
+	id 'org.jetbrains.dokka' version '0.10.1'
 	id 'org.jetbrains.kotlin.jvm' version '1.3.61'
 	id 'io.codearte.nexus-staging' version '0.21.2'
 }
@@ -23,10 +23,11 @@ dependencies {
 	compileOnly "org.jetbrains.kotlin:kotlin-reflect:1.3.61"
 	compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.61"
 	
-	testCompile "org.junit.jupiter:junit-jupiter-engine:5.4.2"
-	testRuntime "org.junit.jupiter:junit-jupiter-engine:5.4.2"
+	testCompile "org.junit.jupiter:junit-jupiter-engine:5.6.0"
+	testRuntime "org.junit.jupiter:junit-jupiter-engine:5.6.0"
 	
-	testCompile 'com.google.code.gson:gson:2.8.6'
+	testCompile "org.assertj:assertj-core:3.15.0"
+	testCompile "com.google.code.gson:gson:2.8.6"
 }
 
 
@@ -40,7 +41,7 @@ test {
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-	kotlinOptions.jvmTarget = "1.8"
+	kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8
 }
 
 
