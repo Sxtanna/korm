@@ -7,6 +7,7 @@ import com.sxtanna.korm.data.custom.KormComment
 import com.sxtanna.korm.data.custom.KormCustomCodec
 import com.sxtanna.korm.data.custom.KormCustomPush
 import com.sxtanna.korm.data.custom.KormList
+import com.sxtanna.korm.data.custom.KormNull
 import com.sxtanna.korm.util.Reflect
 import com.sxtanna.korm.writer.base.Options
 import com.sxtanna.korm.writer.base.WriterOptions
@@ -448,9 +449,8 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			else
 			{
 				list.forEachIndexed { i, it ->
-					if (it == null) return@forEachIndexed
-					
-					val kormType = Reflect.isKormType(it::class)
+					val data = it ?: KormNull
+					val type = Reflect.isKormType(data::class)
 					
 					if (i == 0)
 					{
@@ -461,7 +461,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 							indentMore()
 							writeIndent() // if issues arise, the change was `if (kormType) writeIndent()`
 						}
-						else if (kormType.not() && options.complexListEntryOnNewLine)
+						else if (type.not() && options.complexListEntryOnNewLine)
 						{
 							writeNewLine()
 							indentMore()
@@ -469,7 +469,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 						}
 					}
 					
-					writeData(it, listed = true)
+					writeData(data, listed = true)
 					
 					if (i < list.lastIndex)
 					{
@@ -481,7 +481,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 							writeNewLine()
 							writeIndent() // if issues arise, the change was `if (kormType) writeIndent()`
 						}
-						else if (kormType.not() && options.complexListEntryOnNewLine)
+						else if (type.not() && options.complexListEntryOnNewLine)
 						{
 							writeNewLine()
 							writeIndent()
@@ -509,7 +509,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 							writeIndent()
 						}
 					}
-					else if (kormType.not())
+					else if (type.not())
 					{
 						if (options.complexListEntryOnNewLine)
 						{
@@ -597,8 +597,8 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					}
 				}
 				
-				writeName(name ?: "null")
-				writeData(data ?: "null", true)
+				writeName(name ?: KormNull)
+				writeData(data ?: KormNull, true)
 				
 				if (cur++ < max)
 				{
@@ -687,6 +687,12 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		{
 			when (inst)
 			{
+				is KormNull ->
+				{
+					writeComplexTick()
+					writer.write("null")
+					writeComplexTick()
+				}
 				is Char                           ->
 				{
 					writeSingleQuote()
@@ -792,76 +798,13 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 						
 						val asList = Reflect.findAnnotation<KormList>(inst::class)
 						
-						if (asList == null)
+						if (asList != null)
 						{
-							
-							if (named.not() && listed.not())
-							{
-								if (writingName)
-								{
-									if (options.complexKeyEntryOnNewLine)
-									{
-										writeIndent()
-									}
-								}
-								else
-								{
-									if (options.hashEntryOnNewLine)
-									{
-										writeIndent()
-									}
-								}
-							}
-							
-							writeHashOpen()
-							
-							if (writingName)
-							{
-								if (options.complexKeyEntryOnNewLine)
-								{
-									writeNewLine()
-								}
-								else
-								{
-									writeSpace()
-								}
-							}
-							else
-							{
-								if (options.hashEntryOnNewLine)
-								{
-									writeNewLine()
-								}
-								else
-								{
-									writeSpace()
-								}
-							}
-							
-							writeFields(inst)
-							
-							if (writingName)
-							{
-								if (options.complexKeyEntryOnNewLine)
-								{
-									writeNewLine()
-								}
-								else
-								{
-									writeSpace()
-								}
-							}
-							else
-							{
-								if (options.hashEntryOnNewLine)
-								{
-									writeNewLine()
-								}
-								else
-								{
-									writeSpace()
-								}
-							}
+							return writeFields(inst, asList.props.toList())
+						}
+						
+						if (named.not() && listed.not())
+						{
 							if (writingName)
 							{
 								if (options.complexKeyEntryOnNewLine)
@@ -876,13 +819,74 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 									writeIndent()
 								}
 							}
-							
-							writeHashClose()
+						}
+						
+						writeHashOpen()
+						
+						if (writingName)
+						{
+							if (options.complexKeyEntryOnNewLine)
+							{
+								writeNewLine()
+							}
+							else
+							{
+								writeSpace()
+							}
 						}
 						else
 						{
-							writeFields(inst, asList.props.toList())
+							if (options.hashEntryOnNewLine)
+							{
+								writeNewLine()
+							}
+							else
+							{
+								writeSpace()
+							}
 						}
+						
+						writeFields(inst)
+						
+						if (writingName)
+						{
+							if (options.complexKeyEntryOnNewLine)
+							{
+								writeNewLine()
+							}
+							else
+							{
+								writeSpace()
+							}
+						}
+						else
+						{
+							if (options.hashEntryOnNewLine)
+							{
+								writeNewLine()
+							}
+							else
+							{
+								writeSpace()
+							}
+						}
+						
+						if (writingName)
+						{
+							if (options.complexKeyEntryOnNewLine)
+							{
+								writeIndent()
+							}
+						}
+						else
+						{
+							if (options.hashEntryOnNewLine)
+							{
+								writeIndent()
+							}
+						}
+						
+						writeHashClose()
 					}
 				}
 			}
@@ -939,7 +943,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 				{
 					
 					val name = field.name
-					val data = field[inst] ?: continue
+					val data = field[inst] ?: KormNull
 					
 					if (options.includeComments)
 					{
