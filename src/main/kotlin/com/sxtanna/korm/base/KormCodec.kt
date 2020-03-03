@@ -2,6 +2,7 @@ package com.sxtanna.korm.base
 
 import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.reader.KormReader.ReaderContext
+import com.sxtanna.korm.util.RefType
 import com.sxtanna.korm.writer.KormWriter.WriterContext
 
 /**
@@ -20,10 +21,8 @@ interface KormCodec<T : Any> : KormPuller<T>, KormPusher<T>
 				
 				override fun pull(reader: ReaderContext, types: MutableList<KormType>): T?
 				{
-					val single = types.singleOrNull() ?: return null
-					val result = reader.mapKormToType(single, A::class.java) as? A
-					
-					return functionPull.invoke(result ?: return null)
+					val result = reader.mapDataToType(types.singleOrNull(), RefType.of<A>().type())
+					return functionPull.invoke(result as? A? ?: return null)
 				}
 				
 				override fun push(writer: WriterContext, data: T?)
