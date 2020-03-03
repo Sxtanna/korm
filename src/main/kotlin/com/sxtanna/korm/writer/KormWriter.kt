@@ -785,8 +785,11 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		
 		fun writeData(inst: Any, named: Boolean = false, listed: Boolean = false)
 		{
-			val clazz = inst::class
-			
+			writeDataAs(inst, named, listed, inst::class)
+		}
+		
+		fun writeDataAs(inst: Any, named: Boolean = false, listed: Boolean = false, clazz: KClass<*>)
+		{
 			@Suppress("UNCHECKED_CAST")
 			val custom = getCustomPush(clazz) as? KormPusher<Any>
 			
@@ -1002,7 +1005,8 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					}
 					
 					writeName(name)
-					writeData(data, true)
+					
+					writeDataAs(data, named = true, clazz = field.clazz.kotlin)
 					
 					if (index < fields.lastIndex)
 					{

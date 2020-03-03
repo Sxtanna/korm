@@ -25,4 +25,34 @@ class TestWriter : WithAssertions
 		assertThat(korm.push(Person("Sxtanna", null))).doesNotContain("age")
 	}
 	
+	@Test
+	internal fun `test push writes fields with field type`()
+	{
+		val korm = Korm(KormWriter(2, Options.min()))
+		
+		
+		
+		open class Basic
+		{
+		
+		}
+		
+		korm.pushWith<Basic> { writer, data ->
+			writer.writeHash(mapOf("extra" to "world"))
+		}
+		
+		class Thing(val name: String) : Basic()
+		{
+		
+		}
+		
+		class Other
+		{
+			val thing: Basic = Thing("Sxtanna")
+		}
+		
+		val text = korm.push(Other())
+		
+		assertThat(text).contains("extra")
+	}
 }
