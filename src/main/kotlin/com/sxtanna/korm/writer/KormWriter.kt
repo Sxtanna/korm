@@ -441,7 +441,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		
 		
 		// write types
-		fun writeList(list: List<Any?>)
+		fun writeList(list: List<*>)
 		{
 			writeListOpen()
 			
@@ -545,7 +545,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			writeListClose()
 		}
 		
-		fun writeHash(hash: Map<Any?, Any?>)
+		fun writeHash(hash: Map<*, *>)
 		{
 			val entries = hash.entries
 			
