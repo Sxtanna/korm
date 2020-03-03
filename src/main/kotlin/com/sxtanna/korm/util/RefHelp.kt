@@ -22,6 +22,7 @@ import kotlin.reflect.full.superclasses
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
 @PublishedApi
@@ -374,6 +375,9 @@ internal object RefHelp
 		var field: Field? = null
 		var kprop: KProperty<*>? = null
 		
+		
+		val clazz: Class<*>
+			get() = this.field?.type ?: this.kprop?.returnType?.jvmErasure?.java ?: Any::class.java
 		
 		val genericType: Type
 			get() = this.field?.genericType ?: this.kprop?.returnType?.javaType ?: Any::class.java
