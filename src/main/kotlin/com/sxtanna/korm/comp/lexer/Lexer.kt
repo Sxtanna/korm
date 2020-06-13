@@ -94,7 +94,8 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 							if (stream.next() == '\n') break
 						}
 					}
-					else if (stream.peek(0) == '*' && stream.peek(1) == '*')
+					
+					if (stream.peek(0) == '*')
 					{ // block comment, skip until end
 						while (stream.hasNext)
 						{
