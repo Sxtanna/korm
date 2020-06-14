@@ -1,11 +1,12 @@
 package com.sxtanna.korm
 
-import com.sxtanna.korm.data.option.Options
-import com.sxtanna.korm.writer.KormWriter
+import org.assertj.core.api.WithAssertions
+import org.junit.jupiter.api.TestInstance
 
-class TestReader
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+object TestReader : WithAssertions
 {
 	
-	private val korm = Korm(writer = KormWriter(2, Options.none()))
+	private val kormBase = Korm()
 	
 }
