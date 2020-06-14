@@ -16,12 +16,14 @@ interface KormCodec<T : Any> : KormPuller<T>, KormPusher<T>
 		
 		inline fun <reified T : Any, reified A : Any> by(crossinline functionPull: (A) -> T?, crossinline functionPush: (T?) -> A?): KormCodec<T>
 		{
+			val type = RefType.of<A>().type()
+			
 			return object : KormCodec<T>
 			{
 				
 				override fun pull(reader: ReaderContext, types: MutableList<KormType>): T?
 				{
-					val result = reader.mapDataToType(types.singleOrNull(), RefType.of<A>().type())
+					val result = reader.mapDataToType(types.singleOrNull(), type)
 					return functionPull.invoke(result as? A? ?: return null)
 				}
 				
