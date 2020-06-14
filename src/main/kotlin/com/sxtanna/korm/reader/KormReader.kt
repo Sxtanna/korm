@@ -421,7 +421,7 @@ class KormReader
 							{
 								if (RefHelp.findAnnotation<KormList>(type) != null)
 								{
-									val inst = mapInstanceJ<Any>(type, mutableListOf(korm))
+									return mapInstanceJ<Any>(type, mutableListOf(korm))
 								}
 								
 								return null
