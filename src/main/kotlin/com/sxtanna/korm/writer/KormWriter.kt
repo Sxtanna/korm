@@ -27,8 +27,12 @@ import kotlin.reflect.KClass
 @Suppress("MemberVisibilityCanBePrivate", "UNCHECKED_CAST", "DuplicatedCode")
 class KormWriter(private val indent: Int, private val options: WriterOptions)
 {
+	constructor(options: WriterOptions)
+			: this(2, options)
+	
 	constructor(indent: Int = 2)
 			: this(indent, Options.min())
+	
 	constructor(indent: Int = 2, vararg options: Options)
 			: this(indent, WriterOptions(options.toSet()))
 	
