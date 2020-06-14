@@ -1,6 +1,6 @@
 package com.sxtanna.korm.comp
 
-enum class Type
+enum class TokenType
 {
 	
 	/**

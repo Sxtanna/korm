@@ -1,19 +1,18 @@
 package com.sxtanna.korm.comp.typer
 
-import com.sxtanna.korm.base.Exec
-import com.sxtanna.korm.comp.Token
-import com.sxtanna.korm.comp.Type.*
+import com.sxtanna.korm.comp.TokenData
+import com.sxtanna.korm.comp.TokenType.*
 import com.sxtanna.korm.data.Data
 import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.KormNull
 
-internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
+internal class Typer(private val input: List<TokenData>)
 {
 	
 	private val types = mutableListOf<KormType>()
 	
 	
-	override fun exec(): List<KormType>
+	fun exec(): List<KormType>
 	{
 		val tokens = input.listIterator()
 		
@@ -65,7 +64,7 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 	
 	
 	// data parsers
-	private fun parseBool(token: Token): Boolean
+	private fun parseBool(token: TokenData): Boolean
 	{
 		check(token.type == BOOL) {
 			"Token isn't a boolean type: $token"
@@ -74,7 +73,7 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 		return checkNotNull(token.data.asBoolean())
 	}
 	
-	private fun parseNumber(token: Token): Number
+	private fun parseNumber(token: TokenData): Number
 	{
 		check(token.type in arrayOf(INT, DEC)) {
 			"Token isn't a number type: $token"
@@ -83,7 +82,7 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 		return checkNotNull(token.data.asNumber())
 	}
 	
-	private fun parseQuoted(token: Token): Any
+	private fun parseQuoted(token: TokenData): Any
 	{
 		check(token.type in arrayOf(CHAR, TEXT)) {
 			"Token isn't a quoted type: $token"
@@ -98,7 +97,7 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 	
 	
 	// korm parsers
-	private fun ListIterator<Token>.parseHash(): List<KormType>
+	private fun ListIterator<TokenData>.parseHash(): List<KormType>
 	{
 		val hash = mutableListOf<KormType>()
 		
@@ -121,7 +120,7 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 		return hash
 	}
 	
-	private fun ListIterator<Token>.parseList(): List<Any>
+	private fun ListIterator<TokenData>.parseList(): List<Any>
 	{
 		val list = mutableListOf<Any>()
 		
@@ -129,8 +128,13 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 		{
 			val next = next()
 			
-			if (next.type == COMMA) continue
-			if (next.type == BRACK_R) break
+			if (next.type == COMMA) {
+				continue
+			}
+			if (next.type == BRACK_R)
+			{
+				break
+			}
 			
 			when (next.type)
 			{
@@ -172,18 +176,18 @@ internal class Typer(private val input: List<Token>) : Exec<List<KormType>>
 	}
 	
 	
-	private fun ListIterator<Token>.parseKeyedHash(symbol: Token): KormType.HashType
+	private fun ListIterator<TokenData>.parseKeyedHash(symbol: TokenData): KormType.HashType
 	{
 		return KormType.HashType(symbol.data, parseHash())
 	}
 	
-	private fun ListIterator<Token>.parseKeyedList(symbol: Token): KormType.ListType
+	private fun ListIterator<TokenData>.parseKeyedList(symbol: TokenData): KormType.ListType
 	{
 		return KormType.ListType(symbol.data, parseList())
 	}
 	
 	
-	private fun ListIterator<Token>.parseAssign(symbol: Token): KormType
+	private fun ListIterator<TokenData>.parseAssign(symbol: TokenData): KormType
 	{
 		check(hasNext() && next().type == ASSIGN) {
 			"Symbol without assignment $symbol"

@@ -2,6 +2,7 @@ package com.sxtanna.korm.util
 
 import com.sxtanna.korm.data.KormNull
 import sun.misc.Unsafe
+import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
@@ -10,15 +11,9 @@ import java.util.LinkedHashMap
 import java.util.LinkedList
 import java.util.Queue
 import java.util.UUID
-import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
-import kotlin.reflect.full.cast
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.superclasses
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
@@ -31,7 +26,7 @@ internal object RefHelp
 	private val unsafe: Unsafe? = try
 	{
 		val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
-		unsafeField?.isAccessible = true
+		unsafeField.isAccessible = true
 		
 		unsafeField[null] as Unsafe
 	}
@@ -41,57 +36,74 @@ internal object RefHelp
 		null
 	}
 	
+	private val wrapped = mapOf(
+		Char::class.javaPrimitiveType to Char::class.javaObjectType,
+		Boolean::class.javaPrimitiveType to Boolean::class.javaObjectType,
+		Byte::class.javaPrimitiveType to Byte::class.javaObjectType,
+		Short::class.javaPrimitiveType to Short::class.javaObjectType,
+		Int::class.javaPrimitiveType to Int::class.javaObjectType,
+		Long::class.javaPrimitiveType to Long::class.javaObjectType,
+		Float::class.javaPrimitiveType to Float::class.javaObjectType,
+		Double::class.javaPrimitiveType to Double::class.javaObjectType
+	                           )
 	
-	private val BASE_TYPES = setOf(Number::class, Boolean::class, Char::class, String::class, UUID::class, Enum::class, Throwable::class, KormNull::class)
 	
-	private val LIST_TYPES = setOf(Collection::class)
+	private val BASE_TYPES = setOf(Number::class.java,
+	                               String::class.java,
+	                               UUID::class.java,
+	                               Enum::class.java,
+	                               Throwable::class.java,
+	                               KormNull::class.java,
+	                               *wrapped.entries.flatMap { setOf(it.key, it.value) }.filterNotNull().toTypedArray())
 	
-	private val HASH_TYPES = setOf(Map::class, Map.Entry::class, Pair::class)
+	private val LIST_TYPES = setOf(Collection::class).map(KClass<*>::java)
+	
+	private val HASH_TYPES = setOf(Map::class, Map.Entry::class, Pair::class).map(KClass<*>::java)
 	
 	
-	private fun isOf(types: Collection<KClass<*>>, clazz: KClass<*>): Boolean
+	private fun isOf(types: Collection<Class<*>>, clazz: Class<*>): Boolean
 	{
 		return types.any { clazz == it || isSubType(clazz, it) }
 	}
 	
 	
-	fun isKormType(clazz: KClass<*>): Boolean
+	fun isKormType(clazz: Class<*>): Boolean
 	{
 		return isBaseType(clazz) || isListType(clazz) || isHashType(clazz)
 	}
 	
-	fun isBaseType(clazz: KClass<*>): Boolean
+	fun isBaseType(clazz: Class<*>): Boolean
 	{
-		return clazz.java.isPrimitive || isOf(BASE_TYPES, clazz)
+		return clazz.isPrimitive || isOf(BASE_TYPES, clazz)
 	}
 	
-	fun isListType(clazz: KClass<*>): Boolean
+	fun isListType(clazz: Class<*>): Boolean
 	{
-		return clazz.java.isArray || isOf(LIST_TYPES, clazz)
+		return clazz.isArray || isOf(LIST_TYPES, clazz)
 	}
 	
-	fun isHashType(clazz: KClass<*>): Boolean
+	fun isHashType(clazz: Class<*>): Boolean
 	{
-		return (clazz.java.isArray && clazz.java.componentType.isArray) || isOf(HASH_TYPES, clazz)
-	}
-	
-	
-	fun isSubType(clazz: KClass<*>, of: KClass<*>): Boolean
-	{
-		return of.java.isAssignableFrom(clazz.java)
-	}
-	
-	fun <T : Any> nonPrimitive(clazz: KClass<T>): KClass<T>
-	{
-		return if (clazz.java.isPrimitive.not()) clazz else clazz.javaObjectType.kotlin
+		return (clazz.isArray && clazz.componentType.isArray) || isOf(HASH_TYPES, clazz)
 	}
 	
 	
-	fun fields(inputClazz: KClass<*>): List<Field>
+	fun isSubType(clazz: Class<*>, of: Class<*>): Boolean
+	{
+		return of.isAssignableFrom(clazz)
+	}
+	
+	fun <T : Any> nonPrimitive(clazz: Class<T>): Class<T>
+	{
+		return if (!clazz.isPrimitive) clazz else requireNotNull(wrapped[clazz] as? Class<T>)
+	}
+	
+	
+	fun fields(inputClazz: Class<*>): List<Field>
 	{
 		val fields = mutableListOf<Field>()
 		
-		var clazz: Class<*>? = inputClazz.java
+		var clazz: Class<*>? = inputClazz
 		while (clazz != null)
 		{
 			fields.addAll(clazz.declaredFields)
@@ -101,6 +113,7 @@ internal object RefHelp
 		fields.forEach {
 			it.isAccessible = true
 		}
+		
 		fields.removeAll {
 			Modifier.isStatic(it.modifiers) || Modifier.isTransient(it.modifiers)
 		}
@@ -108,56 +121,12 @@ internal object RefHelp
 		return fields
 	}
 	
-	fun access(inputClazz: KClass<*>): List<Property>
-	{
-		
-		val kprops = mutableListOf<KProperty<*>>()
-		val fields = fields(inputClazz).toMutableList()
-		
-		var jClazz: Class<*>? = inputClazz.java
-		while (jClazz != null)
-		{
-			val props = jClazz.kotlin.declaredMemberProperties
-			fields.removeIf { field -> props.any { it.name == field.name } }
-			
-			kprops.addAll(props)
-			jClazz = jClazz.superclass
-		}
-		
-		kprops.forEach {
-			it.isAccessible = true
-		}
-		kprops.removeAll {
-			it.javaField?.modifiers?.let { Modifier.isStatic(it) || Modifier.isTransient(it) } ?: false
-		}
-		
-		return fields.map { Property(it.name).apply { field = it } } + kprops.map { Property(it.name).apply { kprop = it } }
-	}
 	
-	
-	fun assign(prop: Property, instance: Any, value: Any)
-	{
-		try
-		{
-			if (prop.isAccessible.not())
-			{
-				prop.isAccessible = true
-			}
-			
-			prop[instance] = value
-		}
-		catch (ex: Exception)
-		{
-			ex.printStackTrace()
-		}
-	}
-	
-	
-	fun <T : Any> newInstance(clazz: KClass<T>): T?
+	fun <T> newInstance(clazz: Class<T>): T?
 	{
 		return try
 		{
-			clazz.constructors.find { it.parameters.isEmpty() }?.call() ?: unsafe?.allocateInstance(clazz.java) as? T
+			(clazz.constructors.find { it.parameters.isEmpty() }?.newInstance() ?: unsafe?.allocateInstance(clazz)) as? T
 		}
 		catch (ex: Exception)
 		{
@@ -165,9 +134,9 @@ internal object RefHelp
 		}
 	}
 	
-	inline fun <reified T : Annotation> findAnnotation(on: KAnnotatedElement): T?
+	inline fun <reified T : Annotation> findAnnotation(on: AnnotatedElement): T?
 	{
-		return on.findAnnotation()
+		return on.getAnnotation(T::class.java)
 	}
 	
 	
@@ -237,46 +206,46 @@ internal object RefHelp
 	}
 	
 	
-	fun findListType(clazz: KClass<*>): MutableCollection<Any?>?
+	fun findListType(clazz: Class<*>): MutableCollection<Any?>?
 	{
 		return when
 		{
-			clazz.isSubclassOf(Set::class)      ->
+			clazz.isAssignableFrom(Set::class.java)   ->
 			{
 				LinkedHashSet()
 			}
-			clazz.isSubclassOf(List::class)     ->
+			clazz.isAssignableFrom(List::class.java)  ->
 			{
 				LinkedList()
 			}
-			clazz.isSubclassOf(Queue::class)    ->
+			clazz.isAssignableFrom(Queue::class.java) ->
 			{
 				ArrayDeque()
 			}
-			isSubType(clazz, Collection::class) ->
+			isSubType(clazz, Collection::class.java)  ->
 			{
 				newInstance(clazz) as? MutableCollection<Any?>
 			}
-			else                                ->
+			else                                      ->
 			{
 				null
 			}
 		}
 	}
 	
-	fun findHashType(clazz: KClass<*>): MutableMap<Any?, Any?>?
+	fun findHashType(clazz: Class<*>): MutableMap<Any?, Any?>?
 	{
 		return when
 		{
-			clazz == Map::class || clazz == Pair::class || clazz == Map.Entry::class ->
+			clazz in HASH_TYPES               ->
 			{
 				LinkedHashMap()
 			}
-			isSubType(clazz, Map::class)                                             ->
+			isSubType(clazz, Map::class.java) ->
 			{
 				newInstance(clazz) as? MutableMap<Any?, Any?>
 			}
-			else                                                                     ->
+			else                              ->
 			{
 				null
 			}
@@ -301,9 +270,9 @@ internal object RefHelp
 	}
 	
 	
-	private val arrayTypes = setOf(ByteArray::class, ShortArray::class, IntArray::class, LongArray::class, FloatArray::class, DoubleArray::class, BooleanArray::class, CharArray::class)
+	private val arrayTypes = setOf(ByteArray::class, ShortArray::class, IntArray::class, LongArray::class, FloatArray::class, DoubleArray::class, BooleanArray::class, CharArray::class).map(KClass<*>::java)
 	
-	fun <T : Any> ensureIs(data: Any, clazz: KClass<T>): T
+	fun <T : Any> ensureIs(data: Any, clazz: Class<T>): T
 	{
 		when (clazz)
 		{
@@ -316,39 +285,39 @@ internal object RefHelp
 				@Suppress("IMPLICIT_CAST_TO_ANY")
 				val value = when (clazz)
 				{
-					ByteArray::class    ->
+					ByteArray::class.java    ->
 					{
 						ByteArray(array.size) { array[it] as Byte }
 					}
-					ShortArray::class   ->
+					ShortArray::class.java   ->
 					{
 						ShortArray(array.size) { array[it] as Short }
 					}
-					IntArray::class     ->
+					IntArray::class.java     ->
 					{
 						IntArray(array.size) { array[it] as Int }
 					}
-					LongArray::class    ->
+					LongArray::class.java    ->
 					{
 						LongArray(array.size) { array[it] as Long }
 					}
-					FloatArray::class   ->
+					FloatArray::class.java   ->
 					{
 						FloatArray(array.size) { array[it] as Float }
 					}
-					DoubleArray::class  ->
+					DoubleArray::class.java  ->
 					{
 						DoubleArray(array.size) { array[it] as Double }
 					}
-					CharArray::class    ->
+					CharArray::class.java    ->
 					{
 						CharArray(array.size) { array[it] as Char }
 					}
-					BooleanArray::class ->
+					BooleanArray::class.java ->
 					{
 						BooleanArray(array.size) { array[it] as Boolean }
 					}
-					else                ->
+					else                     ->
 					{
 						array
 					}
@@ -359,12 +328,6 @@ internal object RefHelp
 		}
 		
 		return clazz.cast(data)
-	}
-	
-	
-	fun nextSuperClasses(clazz: KClass<*>): List<KClass<*>>
-	{
-		return clazz.superclasses
 	}
 	
 	
@@ -400,10 +363,10 @@ internal object RefHelp
 			return field?.set(inst, data) ?: (kprop as? KMutableProperty<*>)?.setter?.call(inst, data) ?: kprop?.javaField?.set(inst, data)
 		}
 		
-		inline operator fun <reified A : Annotation> get(annotation: KClass<A>): A?
+		/*inline operator fun <reified A : Annotation> get(annotation: KClass<A>): A?
 		{
 			return kprop?.let { findAnnotation<A>(it) } ?: field?.getAnnotation(annotation.java)
-		}
+		}*/
 		
 	}
 	

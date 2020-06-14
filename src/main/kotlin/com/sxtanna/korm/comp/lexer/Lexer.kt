@@ -1,40 +1,40 @@
 package com.sxtanna.korm.comp.lexer
 
-import com.sxtanna.korm.base.Exec
-import com.sxtanna.korm.comp.Token
-import com.sxtanna.korm.comp.Type
-import com.sxtanna.korm.comp.Type.*
+import com.sxtanna.korm.comp.TokenData
+import com.sxtanna.korm.comp.TokenType
+import com.sxtanna.korm.comp.TokenType.*
 import com.sxtanna.korm.data.Data
 
-internal class Lexer(private val input: String) : Exec<List<Token>>
+internal class Lexer(private val input: String)
 {
 	
 	private var line = 0
 	private var char = 0
 	
-	private val tokens = mutableListOf<Token>()
+	private val tokens = mutableListOf<TokenData>()
 	
 	
-	override fun exec(): List<Token>
+	fun exec(): List<TokenData>
 	{
-		if (tokens.isNotEmpty()) return tokens
+		if (tokens.isNotEmpty())
+		{
+			return tokens
+		}
 		
 		val stream = CharStream()
 		
-		stream.forEach {
-			when (it)
+		stream.forEach()
+		{ c ->
+			when (c)
 			{
-				' '             ->
+				' ',
+				'\r'            ->
 				{
 					char++
 				}
 				'\n'            ->
 				{
 					newLine()
-				}
-				'\r'            ->
-				{
-					// do nothing
 				}
 				','             -> add(COMMA, ",")
 				'{'             -> add(BRACE_L, "{")
@@ -43,50 +43,50 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 				']'             -> add(BRACK_R, "]")
 				':'             ->
 				{
-					
 					if (tokens.isNotEmpty())
 					{
 						val last = tokens.last()
 						
-						if (last.type in RETROSPECT)
+						if (last.type in retrospect)
 						{
 							last.type = SYMBOL
 						}
 					}
 					
 					add(ASSIGN, ":")
-					
 				}
 				'\'', '`', '\"' ->
 				{
 					
-					val type = if (it == '`') COMPLEX else if (it == '\'') CHAR else TEXT
+					val type = if (c == '`') COMPLEX else if (c == '\'') CHAR else TEXT
 					
-					val data = buildString {
+					val data = buildString()
+					{
 						while (stream.hasNext)
 						{
 							val next = stream.next()
 							
-							if (next == it)
+							if (next != c)
 							{
-								if (stream.peek(-2) == '\\')
-								{
-									append(next)
-									continue
-								}
-								break
+								append(next)
+								continue
 							}
 							
-							append(next)
+							if (stream.peek(-2) == '\\')
+							{
+								append(next)
+								continue
+							}
+							
+							break
 						}
-					}.replace("\\\"", "\"")
+					}
 					
-					add(type, data)
+					add(type, data.replace("\\\"", "\""))
 					char += 2
 				}
 				'/'             ->
 				{
-					
 					if (stream.peek(0) == '/')
 					{ // line comment, skip this line
 						while (stream.hasNext)
@@ -106,18 +106,16 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 							}
 						}
 					}
-					
 				}
 				else            ->
 				{
-					
 					var type = SYMBOL
 					
-					val data = buildString {
+					val data = buildString()
+					{
+						append(c)
 						
-						append(it)
-						
-						if (it.isDigit() || it == '-')
+						if (c.isDigit() || c == '-')
 						{
 							
 							type = INT
@@ -126,7 +124,7 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 							{
 								val next = stream.next()
 								
-								if (next.isDigit().not())
+								if (!next.isDigit())
 								{
 									
 									if (next == ']' || next == ',' || next == ' ' || next == ':' || next == '\n')
@@ -135,7 +133,10 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 										break
 									}
 									
-									if (next == '.') type = DEC
+									if (next == '.')
+									{
+										type = DEC
+									}
 									else
 									{
 										append(next)
@@ -155,10 +156,9 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 						{
 							readSymbol(stream)
 						}
-						
 					}
 					
-					if (data in arrayOf("true", "false"))
+					if (data == "true" || data == "false")
 					{
 						type = BOOL
 					}
@@ -179,9 +179,9 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 	}
 	
 	
-	private fun add(type: Type, data: String)
+	private fun add(type: TokenType, data: String)
 	{
-		tokens += Token(line, char, Data(data, type))
+		tokens += TokenData(line, char, Data(data, type))
 		
 		char += data.length
 	}
@@ -192,7 +192,7 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 		{
 			val next = stream.next()
 			
-			if (next.isLetterOrDigit().not() && next !in arrayOf('_', '-', '.'))
+			if (!next.isLetterOrDigit() && next != '_' && next != '-' && next != '.')
 			{
 				stream.move(-1)
 				break
@@ -207,9 +207,10 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 	{
 		
 		private var index = 0
+		private val chars = input.toCharArray()
 		
 		val hasNext: Boolean
-			get() = index < input.length
+			get() = index < chars.size
 		
 		
 		fun move(amount: Int)
@@ -219,12 +220,12 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 		
 		fun peek(amount: Int = 1): Char?
 		{
-			return input.getOrNull(index + amount)
+			return chars.getOrNull(index + amount)
 		}
 		
 		fun next(amount: Int = 1): Char
 		{
-			val char = input[index]
+			val char = chars[index]
 			
 			move(amount)
 			
@@ -233,19 +234,18 @@ internal class Lexer(private val input: String) : Exec<List<Token>>
 		
 		fun forEach(block: (Char) -> Unit)
 		{
-			val chars = input.toCharArray()
-			
-			while (hasNext) block(chars[index++])
+			while (hasNext)
+			{
+				block(chars[index++])
+			}
 		}
 		
 	}
 	
 	
-	private companion object Data
+	companion object
 	{
-		
-		val RETROSPECT = setOf(INT, DEC, BOOL, CHAR, TEXT)
-		
+		private val retrospect = setOf(INT, DEC, BOOL, CHAR, TEXT)
 	}
 	
 }

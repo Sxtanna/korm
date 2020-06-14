@@ -1,20 +1,19 @@
 package com.sxtanna.korm.reader
 
 import com.sxtanna.korm.Korm
-import com.sxtanna.korm.base.Exec
 import com.sxtanna.korm.base.KormPuller
-import com.sxtanna.korm.comp.Type.COMPLEX
+import com.sxtanna.korm.comp.TokenType.COMPLEX
 import com.sxtanna.korm.comp.lexer.Lexer
 import com.sxtanna.korm.comp.typer.Typer
 import com.sxtanna.korm.data.Data
+import com.sxtanna.korm.data.KormNull
 import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.KormType.*
-import com.sxtanna.korm.util.RefType
 import com.sxtanna.korm.data.custom.KormCustomCodec
 import com.sxtanna.korm.data.custom.KormCustomPull
 import com.sxtanna.korm.data.custom.KormList
-import com.sxtanna.korm.data.KormNull
 import com.sxtanna.korm.util.RefHelp
+import com.sxtanna.korm.util.RefType
 import java.io.File
 import java.io.FileReader
 import java.io.InputStream
@@ -30,8 +29,6 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KClass
-import kotlin.reflect.full.cast
-import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.safeCast
 
 /**
@@ -59,7 +56,7 @@ class KormReader
 	 */
 	fun read(file: File): ReaderContext
 	{
-		return if (file.exists().not() || file.isDirectory)
+		return if (!file.exists() || file.isDirectory)
 		{
 			read("")
 		}
@@ -90,7 +87,7 @@ class KormReader
 	 */
 	fun read(reader: Reader): ReaderContext
 	{
-		return context(reader).apply { exec() }
+		return context(reader).apply(ReaderContext::exec)
 	}
 	
 	
@@ -103,17 +100,20 @@ class KormReader
 	 * - Use list of [KormType] to create usable objects
 	 *
 	 */
-	inner class ReaderContext internal constructor(private val reader: Reader) : Exec<Unit>
+	inner class ReaderContext internal constructor(private val reader: Reader)
 	{
 		
 		private val types = mutableListOf<KormType>()
-		private val cache = mutableMapOf<Type, Any>() // testing out inner class deserialization
+		private val cache = mutableMapOf<Type, Any>()
 		
 		
-		override fun exec()
+		fun exec()
 		{
 			val input = reader.buffered().use { it.readText() }
-			if (input.isBlank()) return
+			if (input.isBlank())
+			{
+				return
+			}
 			
 			val lexer = Lexer(input)
 			val typer = Typer(lexer.exec())
@@ -136,12 +136,12 @@ class KormReader
 		//region || ==== Base ==== ||
 		fun <T : Any> to(clazz: KClass<T>): T?
 		{
-			return internalTo(clazz, clazz.java)
+			return internalTo(clazz.java, clazz.java)
 		}
 		
 		inline fun <reified T : Any?> to(): T?
 		{
-			return internalTo(T::class, T::class.java)
+			return internalTo(T::class.java, T::class.java)
 		}
 		
 		fun <T : Any> to(type: Type): T?
@@ -155,7 +155,7 @@ class KormReader
 				type.rawType
 			}
 			
-			return internalTo(RefHelp.nonPrimitive((clazz as Class<*>).kotlin), type)
+			return internalTo(RefHelp.nonPrimitive(clazz as Class<*>), type)
 		}
 		
 		
@@ -172,7 +172,7 @@ class KormReader
 				type.rawType
 			}
 			
-			return internalTo(RefHelp.nonPrimitive((clazz as Class<*>).kotlin), type)
+			return internalTo(RefHelp.nonPrimitive(clazz as Class<*>), type)
 		}
 		
 		inline fun <reified T : Any?> toRef(): T?
@@ -188,12 +188,12 @@ class KormReader
 				type.rawType
 			}
 			
-			return internalTo(RefHelp.nonPrimitive((clazz as Class<*>).kotlin), type)
+			return internalTo(RefHelp.nonPrimitive(clazz as Class<*>), type)
 		}
 		
 		@JvmSynthetic
 		@PublishedApi
-		internal fun <T> internalTo(clazz: KClass<*>, type: Type): T?
+		internal fun <T> internalTo(clazz: Class<*>, type: Type): T?
 		{
 			if (types.isEmpty())
 			{
@@ -202,7 +202,7 @@ class KormReader
 			
 			if (!RefHelp.isKormType(clazz))
 			{
-				return mapInstance(clazz) as? T
+				return mapInstanceJ(clazz) as? T
 			}
 			
 			val korm = if (types.size == 1)
@@ -311,7 +311,7 @@ class KormReader
 		//endregion
 		
 		
-		fun <T : Any> mapInstance(clazz: KClass<out T>, types: MutableList<KormType> = this.types, caller: KormPuller<*>? = null): T?
+		fun <T : Any> mapInstanceJ(clazz: Class<out T>, types: MutableList<KormType> = this.types, caller: KormPuller<*>? = null): T?
 		{
 			if (types.isEmpty())
 			{
@@ -327,19 +327,19 @@ class KormReader
 			else
 			{
 				val instance = RefHelp.newInstance(clazz) ?: return null
-				cache[clazz.java] = instance
+				cache[clazz] = instance
 				
 				val asList = RefHelp.findAnnotation<KormList>(clazz)?.props?.toList()
 				
 				if (asList == null)
 				{
-					val fields = RefHelp.access(clazz)
+					val fields = RefHelp.fields(clazz)
 					
 					for (field in fields)
 					{
-						if (field.isInnerRef)
+						if (field.isSynthetic)
 						{
-							RefHelp.assign(field, instance, cache[field.genericType] ?: continue)
+							field.set(instance, cache[field.genericType] ?: continue)
 							continue
 						}
 						
@@ -360,14 +360,15 @@ class KormReader
 						}
 						
 						val data = mapKormToType(korm, field.genericType) ?: continue
-						RefHelp.assign(field, instance, data)
+						field.set(instance, data)
+						// RefHelp.assign(field, instance, data)
 					}
 				}
 				else
 				{
 					val data = (types.single() as ListType).data
 					
-					val fields = RefHelp.access(clazz).sortedBy { asList.indexOf(it.name) }
+					val fields = RefHelp.fields(clazz)
 					
 					for ((index, field) in fields.withIndex())
 					{
@@ -379,6 +380,10 @@ class KormReader
 			}
 		}
 		
+		fun <T : Any> mapInstanceK(clazz: KClass<out T>, types: MutableList<KormType> = this.types, caller: KormPuller<*>? = null): T?
+		{
+			return mapInstanceJ(clazz.java, types, caller)
+		}
 		
 		// korm mappers
 		fun mapKormToType(korm: KormType, type: Type): Any?
@@ -392,7 +397,7 @@ class KormReader
 						return mapKormToType(korm, type.upperBounds[0])
 					}
 					
-					val custom = getCustomPull((type as Class<*>).kotlin)
+					val custom = getCustomPull(type as Class<*>)
 					if (custom != null)
 					{
 						return custom.pull(this, mutableListOf(korm))
@@ -406,22 +411,23 @@ class KormReader
 					{
 						is Class<*>         ->
 						{
-							val custom = getCustomPull(type.kotlin)
+							val custom = getCustomPull(type)
 							if (custom != null)
 							{
 								return custom.pull(this, mutableListOf(korm))
 							}
 							
-							if (type.isArray.not())
+							if (!type.isArray)
 							{
-								if (RefHelp.findAnnotation<KormList>(type.kotlin) != null)
+								if (RefHelp.findAnnotation<KormList>(type) != null)
 								{
-									return mapInstance<Any>(type.kotlin, mutableListOf(korm))
+									val inst = mapInstanceJ<Any>(type, mutableListOf(korm))
 								}
+								
 								return null
 							}
 							
-							mapList(korm.data, List::class, type.componentType)?.let { list ->
+							mapList(korm.data, List::class.java, type.componentType)?.let { list ->
 								val list = list as List<Any>
 								Array(list.size) { list[it] }
 							}
@@ -438,7 +444,7 @@ class KormReader
 						{
 							val type = type as ParameterizedType
 							
-							val custom = getCustomPull((type.rawType as Class<*>).kotlin)
+							val custom = getCustomPull(type.rawType as Class<*>)
 							if (custom != null)
 							{
 								return custom.pull(this, mutableListOf(korm))
@@ -454,7 +460,7 @@ class KormReader
 					{
 						is Class<*>     ->
 						{
-							mapInstance(type.kotlin, korm.data.toMutableList())
+							mapInstanceJ(type, korm.data.toMutableList())
 						}
 						is WildcardType ->
 						{
@@ -511,7 +517,7 @@ class KormReader
 		// why is this not being used??
 		fun mapBaseData(korm: BaseType, clazz: KClass<*>): Any?
 		{
-			val custom = getCustomPull(clazz)
+			val custom = getCustomPull(clazz.java)
 			if (custom != null)
 			{
 				return custom.pull(this, mutableListOf(korm))
@@ -526,7 +532,7 @@ class KormReader
 				mapDataToType(it, type, (it as? KormType)?.key?.type == COMPLEX)
 			}
 			
-			return mapList(data, clazz, type)
+			return mapList(data, clazz.java, type)
 		}
 		
 		fun mapHashData(korm: HashType, clazz: KClass<*>, kType: Type, vType: Type): Map<Any?, Any?>?
@@ -535,7 +541,7 @@ class KormReader
 				mapDataToType(it.key.data, kType, it.key.type == COMPLEX) to mapKormToType(it, vType)
 			}
 			
-			return mapHash(data, clazz, kType, vType)
+			return mapHash(data, clazz.java, kType, vType)
 		}
 		
 		
@@ -569,7 +575,7 @@ class KormReader
 					
 					return if (type.isArray)
 					{ // handle array
-						mapList(data, List::class, type.componentType)?.let { list ->
+						mapList(data, List::class.java, type.componentType)?.let { list ->
 							val list = list as List<Any>
 							Array(list.size) { list[it] }
 						}
@@ -612,7 +618,7 @@ class KormReader
 				is ParameterizedType ->
 				{
 					val typeArgs = type.actualTypeArguments
-					val typeType = (type.rawType as Class<*>).kotlin
+					val typeType = type.rawType as Class<*>
 					
 					if (typeType.isInstance(data))
 					{
@@ -621,17 +627,17 @@ class KormReader
 					
 					when
 					{
-						RefHelp.isSubType(typeType, Collection::class) ->
+						RefHelp.isSubType(typeType, Collection::class.java) ->
 						{
-							check(RefHelp.isListType(data::class)) {
+							check(RefHelp.isListType(data.javaClass)) {
 								"Cannot map $data to list"
 							}
 							
 							return mapList(data, typeType, typeArgs[0])
 						}
-						RefHelp.isSubType(typeType, Map::class)        ->
+						RefHelp.isSubType(typeType, Map::class.java)        ->
 						{
-							check(RefHelp.isHashType(data::class)) {
+							check(RefHelp.isHashType(data.javaClass)) {
 								"Cannot map $data to hash"
 							}
 							
@@ -650,59 +656,62 @@ class KormReader
 		{
 			data ?: return null
 			
-			val clazz = RefHelp.nonPrimitive(clazz)
+			val clazz = RefHelp.nonPrimitive(clazz.java)
 			
 			if (data is KormType)
 			{
-				return mapKormToType(data, clazz.java) as? T
+				return mapKormToType(data, clazz) as? T
 			}
 			
-			when
+			val value: Any? = when
 			{
-				clazz == UUID::class                          ->
+				clazz == UUID::class.java                          ->
 				{
-					return clazz.cast(UUID.fromString(data as String))
+					UUID.fromString(data as String)
 				}
-				clazz == String::class                        ->
+				clazz == String::class                             ->
 				{
-					return clazz.cast(data as? String ?: data.toString())
+					data as? String ?: data.toString()
 				}
-				clazz == RefHelp.nonPrimitive(Char::class)    ->
+				clazz == RefHelp.nonPrimitive(Char::class.java)    ->
 				{
-					return clazz.cast(data as? Char ?: (data as? String)?.first() ?: data.toString().first())
+					data as? Char ?: (data as? String)?.first() ?: data.toString().first()
 				}
-				clazz == RefHelp.nonPrimitive(Boolean::class) ->
+				clazz == RefHelp.nonPrimitive(Boolean::class.java) ->
 				{
-					return clazz.cast(data as? Boolean)
+					data as? Boolean
 				}
-				RefHelp.isSubType(clazz, Number::class)       ->
+				RefHelp.isSubType(clazz, Number::class.java)       ->
 				{
 					var number = data as? Number ?: return null
 					
 					// I hate this, change it...
-					number = when (clazz)
+					number = when (RefHelp.nonPrimitive(clazz))
 					{
-						Byte::class          -> number.toByte()
-						Short::class         -> number.toShort()
-						Int::class           -> number.toInt()
-						Long::class          -> number.toLong()
-						Float::class         -> number.toFloat()
-						Double::class        -> number.toDouble()
-						AtomicInteger::class -> AtomicInteger(number.toInt())
-						AtomicLong::class    -> AtomicLong(number.toLong())
-						else                 -> number
+						Byte::class.javaObjectType   -> number.toByte()
+						Short::class.javaObjectType  -> number.toShort()
+						Int::class.javaObjectType    -> number.toInt()
+						Long::class.javaObjectType   -> number.toLong()
+						Float::class.javaObjectType  -> number.toFloat()
+						Double::class.javaObjectType -> number.toDouble()
+						AtomicInteger::class.java    -> AtomicInteger(number.toInt())
+						AtomicLong::class.java       -> AtomicLong(number.toLong())
+						else                         -> number
 					}
 					
-					return clazz.cast(number)
+					number
 				}
-				RefHelp.isSubType(clazz, Enum::class)         ->
+				RefHelp.isSubType(clazz, Enum::class.java)         ->
 				{
-					return clazz.java.enumConstants.find { (it as Enum<*>).name.equals(data.toString(), true) }
+					clazz.enumConstants.find { (it as Enum<*>).name.equals(data.toString(), true) }
+				}
+				else                                               ->
+				{
+					null
 				}
 			}
 			
-			return null
-			
+			return clazz.cast(value)
 		}
 		
 		inline fun <reified T : Any> mapData(data: Any?): T?
@@ -710,7 +719,7 @@ class KormReader
 			return mapData(data, T::class)
 		}
 		
-		fun mapList(data: Any?, clazz: KClass<*>, type: Type): Collection<Any?>?
+		fun mapList(data: Any?, clazz: Class<*>, type: Type): Collection<Any?>?
 		{
 			val data = data ?: return null
 			val find = RefHelp.findListType(clazz) ?: return null
@@ -721,7 +730,7 @@ class KormReader
 			}
 		}
 		
-		fun mapHash(data: Any?, clazz: KClass<*>, kType: Type, vType: Type): Map<Any?, Any?>?
+		fun mapHash(data: Any?, clazz: Class<*>, kType: Type, vType: Type): Map<Any?, Any?>?
 		{
 			data ?: return null
 			
@@ -748,7 +757,7 @@ class KormReader
 		}
 		
 		
-		fun <T : Any> getCustomPull(clazz: KClass<T>, caller: KormPuller<*>? = null): KormPuller<T>?
+		fun <T : Any> getCustomPull(clazz: Class<T>, caller: KormPuller<*>? = null): KormPuller<T>?
 		{
 			val stored = korm.pullerOf(clazz)
 			if (stored != null)
@@ -768,9 +777,11 @@ class KormReader
 				return extractFrom(codec.codec)
 			}
 			
-			RefHelp.nextSuperClasses(clazz).forEach {
-				
-				val puller = getCustomPull(it)
+			var nextSuper: Class<*>? = clazz.superclass
+			
+			while (nextSuper != null)
+			{
+				val puller = getCustomPull(nextSuper)
 				
 				if (caller != null && caller == puller)
 				{
@@ -781,7 +792,10 @@ class KormReader
 				{
 					return puller as? KormPuller<T>
 				}
+				
+				nextSuper = nextSuper.superclass
 			}
+			
 			
 			return null
 		}
@@ -789,7 +803,17 @@ class KormReader
 		
 		private fun <T : Any> extractFrom(clazz: KClass<out KormPuller<*>>): KormPuller<T>?
 		{
-			return clazz.let { it.objectInstance ?: it.createInstance() } as? KormPuller<T>
+			return try
+			{
+				val instance = clazz.java.getDeclaredField("INSTANCE")
+				instance.isAccessible = true
+				
+				instance.get(null) as? KormPuller<T>
+			}
+			catch (ex: Exception)
+			{
+				return clazz.java.newInstance() as? KormPuller<T>
+			}
 		}
 		
 	}

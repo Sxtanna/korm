@@ -1,8 +1,8 @@
 package com.sxtanna.korm.data
 
-import com.sxtanna.korm.comp.Type
+import com.sxtanna.korm.comp.TokenType
 
-data class Data(@Transient val inputData: Any, val type: Type)
+data class Data(@Transient val inputData: Any, val type: TokenType)
 {
 	
 	val data: Any
@@ -59,7 +59,7 @@ data class Data(@Transient val inputData: Any, val type: Type)
 	
 	override fun toString(): String
 	{
-		return "Data<${data::class.simpleName}, $type>[$data]"
+		return "Data<${data.javaClass.simpleName}, $type>[$data]"
 	}
 	
 	
@@ -69,7 +69,7 @@ data class Data(@Transient val inputData: Any, val type: Type)
 		/**
 		 * empty [Data] for usage as object headers
 		 */
-		internal fun none() = Data("", Type.TEXT)
+		internal fun none() = Data("", TokenType.TEXT)
 		
 	}
 	

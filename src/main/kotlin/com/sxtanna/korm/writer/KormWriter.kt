@@ -1,7 +1,6 @@
 package com.sxtanna.korm.writer
 
 import com.sxtanna.korm.Korm
-import com.sxtanna.korm.base.Exec
 import com.sxtanna.korm.base.KormPusher
 import com.sxtanna.korm.data.KormNull
 import com.sxtanna.korm.data.custom.KormComment
@@ -18,14 +17,14 @@ import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.io.Writer
+import java.lang.reflect.Field
 import java.util.UUID
 import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 /**
  * This other thing literally takes any object and spits out a serialized korm representation
  */
-@Suppress("MemberVisibilityCanBePrivate", "UNCHECKED_CAST")
+@Suppress("MemberVisibilityCanBePrivate", "UNCHECKED_CAST", "DuplicatedCode")
 class KormWriter(private val indent: Int, private val options: WriterOptions)
 {
 	constructor(indent: Int = 2)
@@ -99,7 +98,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			val nameIsBlank = name.isBlank()
 			checkIfMoreIsAllowed(nameIsBlank)
 			
-			if (nameIsBlank.not())
+			if (!nameIsBlank)
 			{
 				cont.writeIndent()
 				cont.writeName(name)
@@ -125,7 +124,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			val nameIsBlank = name.isBlank()
 			checkIfMoreIsAllowed(nameIsBlank)
 			
-			if (nameIsBlank.not())
+			if (!nameIsBlank)
 			{
 				cont.writeIndent()
 				cont.writeName(name)
@@ -178,7 +177,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			val nameIsBlank = name.isBlank()
 			checkIfMoreIsAllowed(nameIsBlank)
 			
-			if (nameIsBlank.not())
+			if (!nameIsBlank)
 			{
 				cont.writeIndent()
 				cont.writeName(name)
@@ -203,7 +202,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 			val nameIsBlank = name.isBlank()
 			checkIfMoreIsAllowed(nameIsBlank)
 			
-			if (nameIsBlank.not())
+			if (!nameIsBlank)
 			{
 				cont.writeIndent()
 				cont.writeName(name)
@@ -341,7 +340,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		
 	}
 	
-	inner class WriterContext internal constructor(private val data: Any, private val writer: Writer) : Exec<Unit>
+	inner class WriterContext internal constructor(private val data: Any, private val writer: Writer)
 	{
 		
 		private var nameCount = 0
@@ -353,16 +352,18 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		private var currentIndent = 0
 		
 		
-		override fun exec()
+		fun exec()
 		{
-			if (RefHelp.isKormType(data::class))
+			val clazz = data.javaClass
+			
+			if (RefHelp.isKormType(clazz))
 			{
 				writeData(data)
 			}
 			else
 			{
 				indentLess() // hot fix
-				writeFields(data, RefHelp.findAnnotation<KormList>(data::class)?.props?.toList())
+				writeFields(data, RefHelp.findAnnotation<KormList>(clazz)?.props?.toList())
 			}
 			
 			writer.flush()
@@ -459,7 +460,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 						return@forEachIndexed
 					}
 					
-					val type = RefHelp.isKormType(data::class)
+					val type = RefHelp.isKormType(data.javaClass)
 					
 					if (i == 0)
 					{
@@ -470,7 +471,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 							indentMore()
 							writeIndent() // if issues arise, the change was `if (kormType) writeIndent()`
 						}
-						else if (type.not() && options.complexListEntryOnNewLine)
+						else if (!type && options.complexListEntryOnNewLine)
 						{
 							writeNewLine()
 							indentMore()
@@ -490,7 +491,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 							writeNewLine()
 							writeIndent() // if issues arise, the change was `if (kormType) writeIndent()`
 						}
-						else if (type.not() && options.complexListEntryOnNewLine)
+						else if (!type && options.complexListEntryOnNewLine)
 						{
 							writeNewLine()
 							writeIndent()
@@ -518,7 +519,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 							writeIndent()
 						}
 					}
-					else if (type.not())
+					else if (!type)
 					{
 						if (options.complexListEntryOnNewLine)
 						{
@@ -701,13 +702,13 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		{
 			when (inst)
 			{
-				is KormNull ->
+				is KormNull                       ->
 				{
 					writeComplexTick()
 					writer.write("null")
 					writeComplexTick()
 				}
-				is Char                                              ->
+				is Char                           ->
 				{
 					writeSingleQuote()
 					writer.write(inst.toString())
@@ -720,7 +721,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 				is CharSequence, is UUID          ->
 				{
 					val string = inst.toString()
-					val quoted = name.not() || string.shouldBeQuoted()
+					val quoted = !name || string.shouldBeQuoted()
 					
 					if (quoted)
 					{
@@ -785,10 +786,10 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		
 		fun writeData(inst: Any, named: Boolean = false, listed: Boolean = false)
 		{
-			val clazz = inst::class
+			val clazz = inst.javaClass
 			
 			@Suppress("UNCHECKED_CAST")
-			val custom = getCustomPush(clazz) as? KormPusher<Any>
+			val custom = getCustomPush(clazz)
 			
 			if (custom != null) custom.push(this, inst)
 			else
@@ -810,14 +811,14 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					else                      ->
 					{ // write class fields as a hash
 						
-						val asList = RefHelp.findAnnotation<KormList>(inst::class)
+						val asList = RefHelp.findAnnotation<KormList>(clazz)
 						
 						if (asList != null)
 						{
 							return writeFields(inst, asList.props.toList())
 						}
 						
-						if (named.not() && listed.not())
+						if (!named && !listed)
 						{
 							if (writingName)
 							{
@@ -908,11 +909,10 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		
 		fun writeFields(inst: Any, props: List<String>? = null)
 		{
-			val clazz = inst::class
+			val clazz = inst.javaClass
 			
 			@Suppress("UNCHECKED_CAST")
-			val custom = getCustomPush(clazz) as? KormPusher<Any>
-			
+			val custom = getCustomPush(clazz)
 			if (custom != null)
 			{
 				return custom.push(this, inst)
@@ -940,7 +940,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 				}
 			}
 			
-			val fields = RefHelp.access(inst::class).filter { it.isInnerRef.not() }
+			val fields = RefHelp.fields(clazz).filterNot(Field::isSynthetic)
 			
 			if (props != null)
 			{
@@ -966,7 +966,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					
 					if (options.includeComments)
 					{
-						val comment = field[KormComment::class]
+						val comment = field.getAnnotation(KormComment::class.java)
 						
 						if (comment != null && comment.comment.isNotEmpty())
 						{
@@ -1036,6 +1036,8 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					}
 				}
 				
+				println("\n\n")
+				
 				if (fields.isNotEmpty())
 				{
 					if (options.trailingCommas && fields.size > 1)
@@ -1049,7 +1051,7 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		}
 		
 		
-		fun <T : Any> getCustomPush(clazz: KClass<T>, caller: KormPusher<*>? = null): KormPusher<T>?
+		fun <T : Any> getCustomPush(clazz: Class<T>, caller: KormPusher<*>? = null): KormPusher<T>?
 		{
 			val stored = korm.pusherOf(clazz)
 			if (stored != null)
@@ -1069,20 +1071,20 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 				return extractFrom(codec.codec)
 			}
 			
-			RefHelp.nextSuperClasses(clazz).forEach {
-				
-				val pusher = getCustomPush(it)
-				
-				if (caller != null && caller == pusher)
-				{
-					return null // no stack overflows
-				}
-				
-				if (pusher != null)
-				{
-					return pusher as? KormPusher<T>
-				}
-			}
+			// RefHelp.nextSuperClasses(clazz).forEach {
+			//
+			// 	val pusher = getCustomPush(it)
+			//
+			// 	if (caller != null && caller == pusher)
+			// 	{
+			// 		return null // no stack overflows
+			// 	}
+			//
+			// 	if (pusher != null)
+			// 	{
+			// 		return pusher as? KormPusher<T>
+			// 	}
+			// }
 			
 			return null
 		}
@@ -1091,7 +1093,17 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 		@Suppress("UNCHECKED_CAST")
 		private fun <T : Any> extractFrom(clazz: KClass<out KormPusher<*>>): KormPusher<T>?
 		{
-			return clazz.let { it.objectInstance ?: it.createInstance() } as? KormPusher<T>
+			return try
+			{
+				val instance = clazz.java.getDeclaredField("INSTANCE")
+				instance.isAccessible = true
+				
+				instance.get(null) as? KormPusher<T>
+			}
+			catch (ex: Exception)
+			{
+				return clazz.java.newInstance() as? KormPusher<T>
+			}
 		}
 		
 		private fun String.shouldBeQuoted(): Boolean

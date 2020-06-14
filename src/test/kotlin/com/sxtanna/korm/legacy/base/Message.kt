@@ -36,15 +36,15 @@ sealed class Message
 			{
 				"Join"  ->
 				{
-					reader.mapInstance(Join::class, types, this)
+					reader.mapInstanceK(Join::class, types, this)
 				}
 				"Quit"  ->
 				{
-					reader.mapInstance(Quit::class, types, this)
+					reader.mapInstanceK(Quit::class, types, this)
 				}
 				"Error" ->
 				{
-					reader.mapInstance(Error::class, types, this)
+					reader.mapInstanceK(Error::class, types, this)
 				}
 				else    ->
 				{

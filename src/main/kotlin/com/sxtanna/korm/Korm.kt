@@ -31,8 +31,8 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 	}
 	
 	
-	private val pullers = mutableMapOf<KClass<*>, KormPuller<*>>()
-	private val pushers = mutableMapOf<KClass<*>, KormPusher<*>>()
+	private val pullers = mutableMapOf<Class<*>, KormPuller<*>>()
+	private val pushers = mutableMapOf<Class<*>, KormPusher<*>>()
 	
 	
 	// writer
@@ -236,7 +236,7 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 	 * @param clazz The type
 	 * @param puller The puller
 	 */
-	fun <T : Any> pullWith(clazz: KClass<T>, puller: KormPuller<T>)
+	fun <T : Any> pullWith(clazz: Class<T>, puller: KormPuller<T>)
 	{
 		pullers[clazz] = puller
 	}
@@ -247,9 +247,32 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 	 * @param clazz The type
 	 * @param pusher The pusher
 	 */
-	fun <T : Any> pushWith(clazz: KClass<T>, pusher: KormPusher<T>)
+	fun <T : Any> pushWith(clazz: Class<T>, pusher: KormPusher<T>)
 	{
 		pushers[clazz] = pusher
+	}
+	
+	
+	/**
+	 * Set the [KormPuller] for type [T]
+	 *
+	 * @param clazz The type
+	 * @param puller The puller
+	 */
+	fun <T : Any> pullWith(clazz: KClass<T>, puller: KormPuller<T>)
+	{
+		pullWith(clazz.java, puller)
+	}
+	
+	/**
+	 * Set the [KormPusher] for type [T]
+	 *
+	 * @param clazz The type
+	 * @param pusher The pusher
+	 */
+	fun <T : Any> pushWith(clazz: KClass<T>, pusher: KormPusher<T>)
+	{
+		pushWith(clazz.java, pusher)
 	}
 	
 	/**
@@ -295,7 +318,7 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 	 * @param clazz The type
 	 * @return The [KormPuller] if set, or null
 	 */
-	fun <T : Any> pullerOf(clazz: KClass<T>): KormPuller<T>?
+	fun <T : Any> pullerOf(clazz: Class<T>): KormPuller<T>?
 	{
 		return pullers[clazz] as? KormPuller<T>
 	}
@@ -306,16 +329,42 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 	 * @param clazz The type
 	 * @return The [KormPusher] if set, or null
 	 */
-	fun <T : Any> pusherOf(clazz: KClass<T>): KormPusher<T>?
+	fun <T : Any> pusherOf(clazz: Class<T>): KormPusher<T>?
 	{
 		return pushers[clazz] as? KormPusher<T>
 	}
 	
+	/**
+	 * Retrieve the custom pull function for type [T]
+	 *
+	 * @param clazz The type
+	 * @return The [KormPuller] if set, or null
+	 */
+	fun <T : Any> pullerOf(clazz: KClass<T>): KormPuller<T>?
+	{
+		return pullerOf(clazz.java)
+	}
 	
-	fun <T : Any> codecBy(clazz: KClass<T>, codec: KormCodec<T>)
+	/**
+	 * Retrieve the custom push function for type [T]
+	 *
+	 * @param clazz The type
+	 * @return The [KormPusher] if set, or null
+	 */
+	fun <T : Any> pusherOf(clazz: KClass<T>): KormPusher<T>?
+	{
+		return pusherOf(clazz.java)
+	}
+	
+	fun <T : Any> codecBy(clazz: Class<T>, codec: KormCodec<T>)
 	{
 		pullWith(clazz, codec)
 		pushWith(clazz, codec)
+	}
+	
+	fun <T : Any> codecBy(clazz: KClass<T>, codec: KormCodec<T>)
+	{
+		codecBy(clazz.java, codec)
 	}
 	
 	inline fun <reified T : Any, reified A : Any> codecBy(crossinline functionPull: (A) -> T?, crossinline functionPush: (T?) -> A?)

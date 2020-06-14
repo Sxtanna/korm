@@ -31,18 +31,6 @@ class WriterTests
 	
 	
 	@Test
-	internal fun testNoSymbol()
-	{
-		
-		println(korm.push("Hello"))
-		println(korm.push(1234567))
-		
-		println(korm.push(listOf(1, 2, 3, 4, 5)))
-		println(korm.push(mapOf(1 to "1", 2 to "2")))
-		
-	}
-	
-	@Test
 	internal fun testWithSymbol()
 	{
 		println(korm.push(Word("Hello")))

@@ -2,6 +2,7 @@ package com.sxtanna.korm.legacy.io
 
 import com.google.gson.Gson
 import com.sxtanna.korm.Korm
+import com.sxtanna.korm.data.option.Options
 import com.sxtanna.korm.legacy.base.AsListType
 import com.sxtanna.korm.legacy.base.CustomCodecTest
 import com.sxtanna.korm.legacy.base.GameMessage
@@ -18,7 +19,6 @@ import com.sxtanna.korm.legacy.base.custom.CustomBoxed
 import com.sxtanna.korm.legacy.base.custom.CustomClass
 import com.sxtanna.korm.legacy.base.stupid.StupidThing
 import com.sxtanna.korm.writer.KormWriter
-import com.sxtanna.korm.data.option.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID
@@ -448,11 +448,12 @@ class ReaderTests
 		val type = korm.pull(text0).to<InnerClassType>()
 		println(type)
 		
-		type?.inners?.forEach {
-			it.accessTest()
+		type?.inners?.forEach()
+		{ inner ->
+			inner.accessTest()
 			
-			it.innerInners?.forEach { inner ->
-				inner.accessTest()
+			inner.innerInners?.forEach { innerInner ->
+				innerInner.accessTest()
 			}
 		}
 	}
@@ -501,10 +502,7 @@ class ReaderTests
 	@Test
 	internal fun testAtomics()
 	{
-		val text =
-			"""
-                    10
-                """.trimIndent()
+		val text = "10"
 		
 		val type = korm.pull(text)
 		println(type.to<AtomicInteger>())
