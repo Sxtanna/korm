@@ -1,9 +1,9 @@
 package com.sxtanna.korm.legacy.base
 
 import com.sxtanna.korm.base.KormCodec
-import com.sxtanna.korm.legacy.base.CustomCodecTest.Codec
 import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.custom.KormCustomCodec
+import com.sxtanna.korm.legacy.base.CustomCodecTest.Codec
 import com.sxtanna.korm.reader.KormReader
 import com.sxtanna.korm.writer.KormWriter
 

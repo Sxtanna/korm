@@ -15,6 +15,7 @@ enum class TokenType
 		}
 		
 	},
+	
 	/**
 	 * Represents a decimal number, either Float or Double
 	 */
@@ -27,6 +28,7 @@ enum class TokenType
 		}
 		
 	},
+	
 	/**
 	 * Represents a boolean value, either true or false
 	 */
@@ -39,6 +41,7 @@ enum class TokenType
 		}
 		
 	},
+	
 	/**
 	 * Represents a single character, ex. 'A'
 	 */
@@ -51,10 +54,12 @@ enum class TokenType
 		}
 		
 	},
+	
 	/**
 	 * Represents a collection of characters, ex. "String"
 	 */
 	TEXT,
+	
 	/**
 	 * It's... a comma... ','
 	 */
@@ -64,6 +69,7 @@ enum class TokenType
 	 * Represents the opening of a map/object '{'
 	 */
 	BRACE_L,
+	
 	/**
 	 * Represents the closing of a map/object '}'
 	 */
@@ -73,6 +79,7 @@ enum class TokenType
 	 * Represents the opening of a list '['
 	 */
 	BRACK_L,
+	
 	/**
 	 * Represents the closing of a list ']'
 	 */
@@ -82,10 +89,12 @@ enum class TokenType
 	 * Connects a key and a value
 	 */
 	ASSIGN,
+	
 	/**
 	 * Represents the key portion of a 'Key: Value' pair
 	 */
 	SYMBOL,
+	
 	/**
 	 * Represents a complex key
 	 */

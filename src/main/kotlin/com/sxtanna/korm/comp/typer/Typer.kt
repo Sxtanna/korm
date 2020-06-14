@@ -3,8 +3,8 @@ package com.sxtanna.korm.comp.typer
 import com.sxtanna.korm.comp.TokenData
 import com.sxtanna.korm.comp.TokenType.*
 import com.sxtanna.korm.data.Data
-import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.KormNull
+import com.sxtanna.korm.data.KormType
 
 internal class Typer(private val input: List<TokenData>)
 {
@@ -128,7 +128,8 @@ internal class Typer(private val input: List<TokenData>)
 		{
 			val next = next()
 			
-			if (next.type == COMMA) {
+			if (next.type == COMMA)
+			{
 				continue
 			}
 			if (next.type == BRACK_R)
@@ -162,7 +163,8 @@ internal class Typer(private val input: List<TokenData>)
 				{
 					list += KormType.ListType(Data.none(), parseList())
 				}
-				COMPLEX -> {
+				COMPLEX    ->
+				{
 					list += KormType.BaseType(Data.none(), KormNull)
 				}
 				else       ->
@@ -221,7 +223,8 @@ internal class Typer(private val input: List<TokenData>)
 			{
 				parseKeyedList(symbol)
 			}
-			COMPLEX -> {
+			COMPLEX    ->
+			{
 				KormType.BaseType(symbol.data, KormNull) // this should probably be something else... but it works, so who cares
 			}
 			else       ->

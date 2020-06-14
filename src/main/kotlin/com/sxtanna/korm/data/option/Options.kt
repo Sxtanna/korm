@@ -15,46 +15,54 @@ enum class Options
 	 * @sample [trailingCommasSample]
 	 */
 	TRAILING_COMMAS,
+	
 	/**
 	 * Will write a space after writing the assign symbol **:**
 	 *
 	 * @sample [spaceAfterAssignSample]
 	 */
 	SPACE_AFTER_ASSIGN,
+	
 	/**
 	 * Will write a comma after each entry in a hash *(how a list behaves)*
 	 *
 	 * @sample [commaAfterHashEntrySample]
 	 */
 	COMMA_AFTER_HASH_ENTRY,
+	
 	/**
 	 * Will write hash entries on new lines
 	 *
 	 * @sample [hashEntryOnNewLineSample]
 	 */
 	HASH_ENTRY_ON_NEW_LINE,
+	
 	/**
 	 * Will write the entries of a complex key on new lines
 	 *
 	 * @sample [complexKeyEntryOnNewLineSample]
 	 */
 	COMPLEX_KEY_ENTRY_ON_NEW_LINE,
+	
 	/**
 	 * Will write all list entries on new lines
 	 *
 	 * @sample [listEntryOnNewLineSample]
 	 */
 	LIST_ENTRY_ON_NEW_LINE,
+	
 	/**
 	 * Will write complex list entries on new lines
 	 *
 	 * @sample [complexListEntryOnNewLine]
 	 */
 	COMPLEX_LIST_ENTRY_ON_NEW_LINE,
+	
 	/**
 	 * Will write the comments found from [KormComment] annotations
 	 */
 	INCLUDE_COMMENTS,
+	
 	/**
 	 * Will include null values in the serialized output
 	 */

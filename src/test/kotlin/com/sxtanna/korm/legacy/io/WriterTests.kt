@@ -1,6 +1,7 @@
 package com.sxtanna.korm.legacy.io
 
 import com.sxtanna.korm.Korm
+import com.sxtanna.korm.data.option.Options
 import com.sxtanna.korm.legacy.base.ArcadeConfig
 import com.sxtanna.korm.legacy.base.AsListType
 import com.sxtanna.korm.legacy.base.Commented
@@ -17,7 +18,6 @@ import com.sxtanna.korm.legacy.base.Vec
 import com.sxtanna.korm.legacy.base.Word
 import com.sxtanna.korm.legacy.base.stupid.StupidThing
 import com.sxtanna.korm.writer.KormWriter
-import com.sxtanna.korm.data.option.Options
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.io.File

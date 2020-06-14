@@ -50,7 +50,7 @@ sealed class StupidThing
 			functionPush = {
 				it?.name
 			}
-		                                                                                                    )
+		                                             )
 		
 	}
 	
