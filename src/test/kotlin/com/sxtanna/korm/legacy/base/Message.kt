@@ -5,13 +5,12 @@ import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.data.custom.KormCustomPull
 import com.sxtanna.korm.reader.KormReader
 import java.util.UUID
-import kotlin.reflect.jvm.jvmName
 
 @KormCustomPull(Message.Puller::class)
 sealed class Message
 {
 	
-	val name = this::class.simpleName ?: this::class.jvmName.substringAfterLast('.')
+	val name = this::class.simpleName ?: this.javaClass.simpleName.substringAfterLast('.')
 	
 	
 	class Delete : Message()

@@ -20,6 +20,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.Reader
 import java.io.StringReader
+import java.lang.ClassCastException
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -29,7 +30,6 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KClass
-import kotlin.reflect.full.safeCast
 
 /**
  * This thing literally reads from various sources and spits out korm types
@@ -753,7 +753,16 @@ class KormReader
 		// type helpers
 		inline fun <reified T : Any> KormType?.map(): T?
 		{
-			return T::class.safeCast(mapKormToType(this ?: return null, T::class.java))
+			val clazz = T::class.java
+			
+			return try
+			{
+				clazz.cast(mapKormToType(this ?: return null, clazz))
+			}
+			catch (ex: ClassCastException)
+			{
+				null
+			}
 		}
 		
 		

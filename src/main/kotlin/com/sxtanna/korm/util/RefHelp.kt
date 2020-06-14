@@ -5,18 +5,12 @@ import sun.misc.Unsafe
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-import java.lang.reflect.Type
 import java.util.ArrayDeque
 import java.util.LinkedHashMap
 import java.util.LinkedList
 import java.util.Queue
 import java.util.UUID
 import kotlin.reflect.KClass
-import kotlin.reflect.KMutableProperty
-import kotlin.reflect.KProperty
-import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.jvm.javaField
-import kotlin.reflect.jvm.javaType
 
 @Suppress("UNCHECKED_CAST")
 @PublishedApi
@@ -328,46 +322,6 @@ internal object RefHelp
 		}
 		
 		return clazz.cast(data)
-	}
-	
-	
-	data class Property(val name: String)
-	{
-		
-		var field: Field? = null
-		var kprop: KProperty<*>? = null
-		
-		
-		val genericType: Type
-			get() = this.field?.genericType ?: this.kprop?.returnType?.javaType ?: Any::class.java
-		
-		var isAccessible: Boolean
-			get() = this.field?.isAccessible ?: this.kprop?.isAccessible ?: true
-			set(value)
-			{
-				this.field?.isAccessible = value
-				this.kprop?.isAccessible = value
-			}
-		
-		val isInnerRef: Boolean
-			get() = this.field?.isSynthetic ?: kprop?.javaField?.isSynthetic ?: false
-		
-		
-		operator fun get(inst: Any): Any?
-		{
-			return field?.get(inst) ?: kprop?.getter?.call(inst)
-		}
-		
-		operator fun set(inst: Any, data: Any): Unit?
-		{
-			return field?.set(inst, data) ?: (kprop as? KMutableProperty<*>)?.setter?.call(inst, data) ?: kprop?.javaField?.set(inst, data)
-		}
-		
-		/*inline operator fun <reified A : Annotation> get(annotation: KClass<A>): A?
-		{
-			return kprop?.let { findAnnotation<A>(it) } ?: field?.getAnnotation(annotation.java)
-		}*/
-		
 	}
 	
 }
