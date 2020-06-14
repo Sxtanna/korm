@@ -194,3 +194,6 @@ ages: {  // Map<Age, Int>
   `{ age: 23 }`: 23
 }
 ```
+
+
+Massive Improvements due to Java Profiling with [![GitHub](https://www.ej-technologies.com/images/product_banners/jprofiler_small.png)](https://www.ej-technologies.com/products/jprofiler/overview.html) 
