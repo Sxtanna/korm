@@ -1,5 +1,6 @@
 package com.sxtanna.korm.base
 
+import com.sxtanna.korm.data.KormNull
 import com.sxtanna.korm.data.KormType
 import com.sxtanna.korm.reader.KormReader.ReaderContext
 import com.sxtanna.korm.util.RefType
@@ -29,7 +30,7 @@ interface KormCodec<T : Any> : KormPuller<T>, KormPusher<T>
 				
 				override fun push(writer: WriterContext, data: T?)
 				{
-					writer.writeData(functionPush.invoke(data) ?: return)
+					writer.writeData(functionPush.invoke(data) ?: KormNull)
 				}
 				
 			}
