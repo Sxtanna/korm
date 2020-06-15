@@ -27,8 +27,7 @@ internal class Lexer(private val input: String)
 		{ c ->
 			when (c)
 			{
-				' ',
-				'\r'            ->
+				' ', '	', '\r'     ->
 				{
 					char++
 				}
