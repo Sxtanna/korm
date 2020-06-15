@@ -1075,20 +1075,24 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 				return extractFrom(codec.codec)
 			}
 			
-			// RefHelp.nextSuperClasses(clazz).forEach {
-			//
-			// 	val pusher = getCustomPush(it)
-			//
-			// 	if (caller != null && caller == pusher)
-			// 	{
-			// 		return null // no stack overflows
-			// 	}
-			//
-			// 	if (pusher != null)
-			// 	{
-			// 		return pusher as? KormPusher<T>
-			// 	}
-			// }
+			var nextSuper: Class<*>? = clazz.superclass
+			
+			while (nextSuper != null)
+			{
+				val pusher = getCustomPush(nextSuper)
+				
+				if (caller != null && caller == pusher)
+				{
+					return null // no stack overflows
+				}
+				
+				if (pusher != null)
+				{
+					return pusher as? KormPusher<T>
+				}
+				
+				nextSuper = nextSuper.superclass
+			}
 			
 			return null
 		}
