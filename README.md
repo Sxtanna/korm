@@ -27,7 +27,7 @@
 
 
 #### This is basically a stripped down Json with slightly different syntax. This readme is going to follow the same format as [TOML's](https://github.com/toml-lang/toml)
-#### At it's core, Korm is meant to be purely a transactional format, meaning the document should always be a representation of some object.
+#### At its core, Korm is meant to be purely a transactional format, meaning the document should always be a representation of some object.
 
 
 Example
