@@ -3,8 +3,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/Sxtanna/KORM/">
-    <img src="logo.png" alt="Logo" width="100" height="100">
+  <a href="https://github.com/Sxtanna/korm/">
+    <img src="https://i.imgur.com/KNDngsc.png" alt="logo" width="320" height="160">
   </a>
 
   <h3 align="center">Korm</h3>
@@ -12,16 +12,16 @@
   <p align="center">
     Kotlin Object Relational Mapping
     <br />
-    <a href="https://github.com/Sxtanna/KORM/wiki"><strong>Unimplemented Wiki :) »</strong></a>
+    <a href="https://github.com/Sxtanna/korm/wiki"><strong>Unimplemented Wiki :) »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/Sxtanna/KORM/">View Demo</a>
+    <a href="https://github.com/Sxtanna/korm/blob/master/src/test/kotlin/com/sxtanna/korm/Examples.kt">View Demo</a>
     ·
-    <a href="https://github.com/Sxtanna/KORM/issues">Report Bug</a>
+    <a href="https://github.com/Sxtanna/korm/issues">Report Bug</a>
     ·
-    <a href="https://github.com/Sxtanna/KORM/issues">Request Feature</a>
+    <a href="https://github.com/Sxtanna/korm/issues">Request Feature</a>
     ·
-    <a href="https://github.com/Sxtanna/KORM/pulls">Send a Pull Request</a>
+    <a href="https://github.com/Sxtanna/korm/pulls">Send a Pull Request</a>
   </p>
 </p>
 
