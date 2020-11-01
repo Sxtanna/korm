@@ -1040,8 +1040,6 @@ class KormWriter(private val indent: Int, private val options: WriterOptions)
 					}
 				}
 				
-				println("\n\n")
-				
 				if (fields.isNotEmpty())
 				{
 					if (options.trailingCommas && fields.size > 1)
