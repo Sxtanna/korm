@@ -166,6 +166,19 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 	}
 	
 	/**
+	 * Pull korm data from [file] and directly create an instance of [T] from it
+	 *
+	 * @param file The file to pull from
+	 *
+	 * @return The instance created
+	 * @throws IllegalStateException if the instance could not be created
+	 */
+	inline fun <reified T : Any> pull(file: File): T
+	{
+		return pull<T>(file.reader())
+	}
+	
+	/**
 	 * Pull korm data from [reader] and directly create an instance of [to] from it
 	 *
 	 * @param reader The reader to pull from
