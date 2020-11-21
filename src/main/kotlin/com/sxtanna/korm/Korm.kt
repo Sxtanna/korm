@@ -139,9 +139,24 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 	// directly
 	
 	/**
+	 * Pull korm data from [file] and directly create an instance of [to] from it
+	 *
+	 * @param file The File to pull from
+	 * @param to The class type to create
+	 *
+	 * @return The instance created
+	 * @throws IllegalStateException if the instance could not be created
+	 */
+	fun <T : Any> pull(file: File, to: KClass<T>): T
+	{
+		return checkNotNull(pull(file).to(to)) { "Result is null" }
+	}
+	
+	
+	/**
 	 * Pull korm data from [text] and directly create an instance of [to] from it
 	 *
-	 * @param text The text to pull from
+	 * @param text The String to pull from
 	 * @param to The class type to create
 	 *
 	 * @return The instance created
@@ -152,36 +167,27 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 		return checkNotNull(pull(text).to(to)) { "Result is null" }
 	}
 	
-	/**
-	 * Pull korm data from [text] and directly create an instance of [T] from it
-	 *
-	 * @param text The text to pull from
-	 *
-	 * @return The instance created
-	 * @throws IllegalStateException if the instance could not be created
-	 */
-	inline fun <reified T : Any> pull(text: String): T
-	{
-		return pull(text, T::class)
-	}
 	
 	/**
-	 * Pull korm data from [file] and directly create an instance of [T] from it
+	 * Pull korm data from [stream] and directly create an instance of [to] from it
 	 *
-	 * @param file The file to pull from
+	 * @param stream The InputStream to pull from
+	 * @param to The class type to create
+	 * @param charset The Charset to read the stream with
 	 *
 	 * @return The instance created
 	 * @throws IllegalStateException if the instance could not be created
 	 */
-	inline fun <reified T : Any> pull(file: File): T
+	fun <T : Any> pull(stream: InputStream, to: KClass<T>, charset: Charset = Charset.defaultCharset()): T
 	{
-		return pull<T>(file.reader())
+		return checkNotNull(pull(stream, charset).to(to)) { "Result is null" }
 	}
+	
 	
 	/**
 	 * Pull korm data from [reader] and directly create an instance of [to] from it
 	 *
-	 * @param reader The reader to pull from
+	 * @param reader The Reader to pull from
 	 * @param to The class type to create
 	 *
 	 * @return The instance created
@@ -192,10 +198,51 @@ class Korm(val reader: KormReader = KormReader(), val writer: KormWriter = KormW
 		return checkNotNull(pull(reader).to(to)) { "Result is null" }
 	}
 	
+	
+	/**
+	 * Pull korm data from [file] and directly create an instance of [T] from it
+	 *
+	 * @param file The File to pull from
+	 *
+	 * @return The instance created
+	 * @throws IllegalStateException if the instance could not be created
+	 */
+	inline fun <reified T : Any> pull(file: File): T
+	{
+		return pull<T>(file.reader())
+	}
+	
+	/**
+	 * Pull korm data from [text] and directly create an instance of [T] from it
+	 *
+	 * @param text The String to pull from
+	 *
+	 * @return The instance created
+	 * @throws IllegalStateException if the instance could not be created
+	 */
+	inline fun <reified T : Any> pull(text: String): T
+	{
+		return pull(text, T::class)
+	}
+	
+	/**
+	 * Pull korm data from [stream] and directly create an instance of [T] from it
+	 *
+	 * @param stream The InputStream to pull from
+	 * @param charset The Charset to read the stream with
+	 *
+	 * @return The instance created
+	 * @throws IllegalStateException if the instance could not be created
+	 */
+	inline fun <reified T : Any> pull(stream: InputStream, charset: Charset = Charset.defaultCharset()): T
+	{
+		return pull(stream, T::class, charset)
+	}
+	
 	/**
 	 * Pull korm data from [reader] and directly create an instance of [T] from it
 	 *
-	 * @param reader The text to pull from
+	 * @param reader The Reader to pull from
 	 *
 	 * @return The instance created
 	 * @throws IllegalStateException if the instance could not be created
