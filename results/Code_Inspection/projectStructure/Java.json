@@ -1,0 +1,16 @@
+{
+  "modules": [
+    {
+      "name": "Korm",
+      "languageLevel": 11
+    },
+    {
+      "name": "Korm.test",
+      "languageLevel": 11
+    },
+    {
+      "name": "Korm.main",
+      "languageLevel": 11
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "total": 1,
+  "tools inspection": {
+    "Code Inspection": 1
+  },
+  "attributes": {
+    "vcs": {
+      "sarifIdea": {
+        "repositoryUri": "https://github.com/Sxtanna/korm",
+        "revisionId": "7260bd1985b28c3ada54ec3cfe808758ed7e07b5",
+        "branch": "master"
+      }
+    },
+    "deviceId": "200820300000000-167f-eff3-8ddd-16cd9500ce9d",
+    "jobUrl": "https://github.com/Sxtanna/korm/actions/runs/3430549647",
+    "repoUrl": "https://github.com/Sxtanna/korm"
+  }
+}

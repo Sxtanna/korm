@@ -1,0 +1,29 @@
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Migration",
+  "type": "Usage of redundant or deprecated syntax or deprecated symbols",
+  "severity": "High",
+  "comment": "'max(): T?' is deprecated. Use maxOrNull instead.",
+  "detailsInfo": "Reports obsolete language features and unnecessarily verbose code constructs during the code cleanup operation (**Code \\| Code Cleanup** ).\n\n\nA quick-fix automatically replaces usages of obsolete language features or unnecessarily verbose code constructs with compact and up-to-date syntax.\n\n\nIt also replaces deprecated symbols with their proposed substitutions.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/kotlin/com/sxtanna/korm/reader/KormReader.kt",
+      "language": "kotlin",
+      "line": 608,
+      "offset": 30,
+      "length": 3,
+      "code": {
+        "startLine": 606,
+        "length": 3,
+        "offset": 95,
+        "surroundingCode": "\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tval data = (data as? Map<Int, Any>) ?: return null\n\t\t\t\t\t\t\tval size = (data.keys.max() ?: 0) + 1\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\treturn Array(size) { mapDataToType(data[it], arg) }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "Korm.main",
+    "inspectionName": "KotlinDeprecation"
+  },
+  "hash": "bb936d30d5c02647c9d09f0494241fb42498a82b38f76202edaf359a285a0f44"
+}]}
